@@ -74,7 +74,7 @@
 1. 在 GitHub 浏览本仓库的 `prompts/` 目录
 2. 找你需要的步骤, 打开 .md 文件
 3. 复制 `## ✂️ Prompt 模板` 段落
-4. 粘贴到 Claude.ai / ChatGPT / Gemini / 文心一言, 按提示填空
+4. 粘贴到 Claude Code/Codex, 按提示填空
 
 ### 🟡 路径 B · 装成 Claude Skill（适合 Claude Desktop / Code 用户）
 
