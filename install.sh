@@ -35,9 +35,10 @@ mkdir -p "$SKILLS_DIR"
 echo "📥 下载仓库..."
 git clone --depth 1 --quiet "$REPO" "$TMP_DIR/repo"
 
-# 4. 复制 skills
+# 4. 复制 skills（安装仓库内全部 skill）
 echo "📦 安装 skill..."
-for skill in analyze-quantitative-data analyze-qualitative-data; do
+for skill_dir in "$TMP_DIR/repo/skills"/*/; do
+    skill="$(basename "$skill_dir")"
     if [ -d "$SKILLS_DIR/$skill" ]; then
         echo "   ↻ $skill (覆盖已有版本)"
         rm -rf "$SKILLS_DIR/$skill"

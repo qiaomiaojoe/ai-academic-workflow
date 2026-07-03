@@ -1,6 +1,6 @@
 # AI 学术工作流 · Neuman 方法 × AI Prompt
 
-> **18 个 prompt + 2 个 Claude Skill**, 把社科研究方法教科书 (Neuman 7e) 的成熟步骤翻译成可直接跑的 AI 工作流。
+> **18 个 prompt + 12 个 Claude Skill**, 把社科研究方法教科书 (Neuman 7e) 的成熟步骤 + 一条从选题到全文初稿的完整学术工作流, 翻译成可直接跑的 AI 工作流。
 >
 > **谁在用**：AI 学术训练营 (乔淼 PhD) 学员; 自学的社科 PhD 申请者 / 研究生新手; 任何不是统计学家但又必须做数据分析的研究者。
 
@@ -18,6 +18,34 @@
 - 👤 **你** — 理论判断 / 度量层级 / 实质性意义
 
 三者拼起来 → 你能开始动手做研究, 不必先学完一个学期的 stats 课。
+
+---
+
+## 12 个 Claude Skills 菜单
+
+装进 Claude Code / Codex 后可直接对话触发（安装见下方"路径 B"）。**每个 skill 都能单独调用**：优先用你直接给的输入；检测到标准项目结构（`academic-project-init` 建的）就自动读上游产出；都没有就问你最小必需输入——不会因为缺上一阶段文件而卡住。
+
+### 🔄 学术工作流 (10 个 · 从选题到全文初稿)
+
+| 工作流阶段 | Skill | 一句话用途 | 单独调用最小输入 |
+|---|---|---|---|
+| 0 项目初始化 | [`academic-project-init`](skills/academic-project-init/SKILL.md) | 建标准项目结构 + CLAUDE.md 命名表 | 项目名 + 产出语言 |
+| 1 选题 | [`topic-workbench`](skills/topic-workbench/SKILL.md) | PXYV 选题教练, 4 种模式 × 三阶段 (挖掘→校准→输出), 支持断点续跑 | 口头说研究方向 |
+| 2 文献搜索 | [`literature-search`](skills/literature-search/SKILL.md) | 四维检索 → 验真 → 金字塔分层 → DOI/PDF → 入库 Zotero + 可视化 | 选题一句话 |
+| 3 文献分析 | [`literature-analysis`](skills/literature-analysis/SKILL.md) | 综述蓝图 → 知识模块 → 综述初稿 (含引用核验 + docx) | Zotero 集合 / PDF 文件夹 / 文献清单 任一 + RQ |
+| 4 研究设计 | [`research-design`](skills/research-design/SKILL.md) | 方法地图 + 2-3 个设计方案给你选 → 方法论初稿 | RQ + 学科 + 文献语料 |
+| 5 数据分析 | [`data-analysis-round`](skills/data-analysis-round/SKILL.md) | 跑一轮定量/定性/自定义 skill 分析, 多轮记账不覆盖 | 数据文件路径 |
+| 5 数据分析 | [`findings-synthesis`](skills/findings-synthesis/SKILL.md) | 把全部轮次产出整合成对应 RQ 的研究发现 | 分析产出目录 + RQ 清单 |
+| 6 全文初稿 | [`model-paper-deconstruct`](skills/model-paper-deconstruct/SKILL.md) | 动静虚实框架高密度拆解一篇范文 | 一个 PDF 或 Zotero 标题 |
+| 6 全文初稿 | [`fulltext-draft`](skills/fulltext-draft/SKILL.md) | 基于拆解报告反推文章框架 + 扩写全文初稿 | RQ + 一份拆解报告 |
+| ⚙️ 造 skill | [`data-skill-workshop`](skills/data-skill-workshop/SKILL.md) | 规划要造哪些分析 skill + 把教科书 PDF 做成成品 skill | 一句方法需求 / 源材料路径 |
+
+### 📊📝 数据分析方法 (2 个 · 基于 Neuman 7e)
+
+| Skill | 一句话用途 |
+|---|---|
+| [`analyze-quantitative-data`](skills/analyze-quantitative-data/SKILL.md) | 定量分析全流程 (Ch 12): codebook → 清洗 → 单变量 → 双变量 → 阐释 → 回归 → 推断 |
+| [`analyze-qualitative-data`](skills/analyze-qualitative-data/SKILL.md) | 定性分析全流程 (Ch 14): 三阶段编码 + analytic memo + 七大分析策略 |
 
 ---
 
@@ -92,9 +120,8 @@ curl -fsSL https://raw.githubusercontent.com/qiaomiaojoe/ai-academic-workflow/ma
 # 1. clone 本仓库
 git clone https://github.com/qiaomiaojoe/ai-academic-workflow.git
 
-# 2. 复制 skill 到 Claude 配置目录
-cp -r ai-academic-workflow/skills/analyze-quantitative-data ~/.claude/skills/
-cp -r ai-academic-workflow/skills/analyze-qualitative-data ~/.claude/skills/
+# 2. 复制全部 skill 到 Claude 配置目录
+cp -r ai-academic-workflow/skills/* ~/.claude/skills/
 
 # 3. 重启 Claude Desktop / Code 即可
 ```
@@ -102,6 +129,9 @@ cp -r ai-academic-workflow/skills/analyze-qualitative-data ~/.claude/skills/
 装好后 Claude 在如下场景会主动推荐 skill:
 - "我要分析这份调查数据" → `analyze-quantitative-data`
 - "帮我编码这些访谈" → `analyze-qualitative-data`
+- "帮我选题" → `topic-workbench` ; "帮我搜文献入 Zotero" → `literature-search`
+- "做文献综述" → `literature-analysis` ; "帮我做研究设计" → `research-design`
+- "拆这篇 model paper" → `model-paper-deconstruct` ; "写全文初稿" → `fulltext-draft`
 
 ---
 
