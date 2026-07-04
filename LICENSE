@@ -1,34 +1,48 @@
-Attribution 4.0 International (CC BY 4.0)
+许可协议（版权所有 · 受限使用）
+=====================================
 
-Copyright (c) 2026 乔淼 (Qiao Miao)
+版权所有 © 2026 乔淼（乔淼PhD）。保留所有权利。
+Copyright © 2026 Qiao Miao (乔淼PhD). All rights reserved.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this work and associated documentation files (the "Work"), to deal in the Work
-without restriction, including without limitation the rights to use, copy,
-modify, merge, publish, distribute, sublicense, and/or sell copies of the Work,
-and to permit persons to whom the Work is furnished to do so, subject to the
-following condition:
+本仓库全部内容（包括但不限于全部 skills、prompts、文档与示例，以下称"本作品"）
+是「AI学术训练营」的配套培训材料，属于作者的原创劳动成果，受著作权法保护。
+公开本仓库是为了展示与学员安装的便利，不构成对任何权利的放弃或开放授权。
 
-ATTRIBUTION — You must give appropriate credit to the original author (乔淼 /
-Qiao Miao), provide a link to this repository (https://github.com/qiaomiaojoe/
-ai-academic-workflow), and indicate if changes were made. You may do so in any
-reasonable manner, but not in any way that suggests the licensor endorses you
-or your use.
+一、允许的使用
+--------------
+1. **查看与个人学习试用**：任何人可以查看本仓库内容，并在个人的、非商业的
+   学习与研究场景中试用。
+2. **学员使用**：「AI学术训练营」付费学员获得在其个人学术研究中使用本作品的
+   完整授权，包括安装到自己的 Claude Code / Codex 环境、按自己的研究需要
+   调整配置与组合调用。该授权不可转让。
 
-The Work is provided "as is", without warranty of any kind, express or implied,
-including but not limited to the warranties of merchantability, fitness for a
-particular purpose and noninfringement.
+二、未经作者书面许可，禁止的行为
+--------------------------------
+1. **再分发**：不得以任何形式向第三方分发本作品或其修改版本，包括但不限于
+   转载、打包、镜像仓库、上传到其他代码托管平台、网盘、知识付费社群或
+   任何公开/半公开渠道。
+2. **商业使用**：不得将本作品用于任何商业目的，包括但不限于付费课程、
+   培训、咨询服务、SaaS 或其他盈利性产品与服务。
+3. **去除署名**：不得移除、修改或隐匿本作品中的作者署名、品牌标识
+   （乔淼PhD / AI学术训练营 / AI学术工作流）与来源信息。
 
-For full license text see: https://creativecommons.org/licenses/by/4.0/
+三、其他
+--------
+1. 在学术写作中引用本作品的方法论内容时，请按 README 的引用格式署名。
+2. 商业合作与授权咨询：联系 乔淼PhD（微信公众号「乔淼PhD」）。
+3. 本仓库自 2026-07-04 起适用本协议。本协议不追溯约束此前依据当时许可
+   合法获得的历史版本副本。
+4. 本作品按"现状"提供，不附带任何明示或默示的担保。
 
----
+--------------------------------------------------------------------
 
-REFERENCED TEXTBOOK (not redistributed):
+English Summary (for reference; the Chinese text above governs):
 
-This Work derives its analytical procedures from:
-  Neuman, W. L. (2014). Social Research Methods: Qualitative and Quantitative
-  Approaches (7th ed.). Pearson Education Limited. ISBN: 978-1-292-02023-5.
-
-Page references and chapter sections are cited under fair-use academic
-attribution. Users should consult the original textbook for full methodological
-context. This Work does not redistribute any textbook content.
+This repository is proprietary training material for the "AI学术训练营"
+(AI Academic Bootcamp) by Qiao Miao (乔淼PhD). You may view the contents
+and try them for personal, non-commercial learning. Paid bootcamp students
+are granted a full, non-transferable license for personal academic use.
+Redistribution in any form, commercial use (including use in courses,
+training, consulting, or paid services), and removal of attribution are
+prohibited without prior written permission from the author.
+Provided "as is", without warranty of any kind.
