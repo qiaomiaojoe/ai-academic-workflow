@@ -1,13 +1,13 @@
 ---
 name: findings-synthesis
-description: 综合研究发现 skill（源自 AI学术工作台 05 数据分析「🔗 综合发现」，单品化）。把多轮/多 skill 的数据分析产出整合成对应研究问题的研究发现：逐子问题/假设给结论判定 + 证据整合（定量 effect size 与定性主题并列）+ 方法间 convergence/divergence + 置信度局限 + 来源对照表，合法呈现零结果，绝不编造。产出 研究发现.md（全文初稿 Results/Findings 节的权威输入）。Trigger on："综合发现"、"把各轮分析汇总成研究发现"、"整合数据分析结果"、"synthesize my analysis results"、"combine quant and qual findings"、"write up findings from all analysis rounds"。
+description: 综合研究发现（乔淼PhD · AI学术训练营 · AI学术工作流 · 数据分析终点）。把多轮/多 skill 的数据分析产出整合成对应研究问题的研究发现：逐子问题/假设给结论判定 + 证据整合（定量 effect size 与定性主题并列）+ 方法间 convergence/divergence + 置信度局限 + 来源对照表，合法呈现零结果，绝不编造。产出 研究发现.md（全文初稿 Results/Findings 节的权威输入）。Trigger on："综合发现"、"把各轮分析汇总成研究发现"、"整合数据分析结果"、"synthesize my analysis results"、"combine quant and qual findings"、"write up findings from all analysis rounds"。
 ---
 
 # Findings Synthesis · 综合研究发现（数据分析最终产出）
 
 把数据分析的**全部轮次、全部 skill 的产出**整合成一份对应研究问题的研究发现。这不是某一个 skill 的原始输出，而是面向 RQ 的综合发现。
 
-## 单品调用约定（输入解耦）
+## 调用约定（独立运行）
 
 **必填**：分析产出所在位置——项目内默认 `04_数据/`，或用户指定的任意目录/文件清单。
 

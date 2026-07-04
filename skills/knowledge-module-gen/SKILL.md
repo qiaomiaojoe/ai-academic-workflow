@@ -1,4 +1,15 @@
-# 步骤 2 · 知识模块生成
+---
+name: knowledge-module-gen
+description: 知识模块生成（乔淼PhD · AI学术训练营 · AI学术工作流 · 文献分析步骤）。按知识模块清单逐模块读全文生成 M_n.md：机械抽取模块 prompt（不改写不补全）、flag 而非 ask、map-reduce 逐篇防爆上下文、页码诚实、每模块一行执行日志自检；支持 Zotero / NotebookLM / 本地 PDF 三种数据通道。Trigger on："生成知识模块"、"按模块清单跑模块"、"逐模块读全文写 M1-Mn"、"generate knowledge modules from my module list"。
+---
+
+# Knowledge Module Gen · 知识模块生成
+
+## 调用约定（独立运行）
+
+- 输入：知识模块清单（项目 `02_文献/知识模块清单.md` 或用户给的路径；没有 → 先跑 `knowledge-module-list`）+ 主数据通道（Zotero MCP / NotebookLM / 本地 PDF，问用户或按可用性选）。
+- 落盘：项目内 `02_文献/模块/M_n.md` + `02_文献/执行日志.md`；项目外 `./模块/` + `./执行日志.md`。
+- 工具适配：以环境实际可用为准，不可用时走降级通道并注明，不编造工具结果。
 
 前置：已有 知识模块清单.md（步骤 1 Part A 产物）。若没有，先跑步骤 1。
 

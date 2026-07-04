@@ -1,4 +1,15 @@
-# 步骤 3 · 综述初稿组装（本工作流终点）
+---
+name: review-draft-assembly
+description: 综述初稿组装（乔淼PhD · AI学术训练营 · AI学术工作流 · 文献分析步骤）。按综述蓝图把知识模块组装成综述初稿：三 Section 组装规则 + 深读张力句并入 + 逐条引用核验（对照 Zotero/清单出独立报告）+ 参考文献表 + 反 AI 味写作要求 + 初稿纯净交付（零模块编号零 Zotero key）+ 转 docx。Trigger on："组装综述初稿"、"把模块拼成综述"、"综述成稿"、"assemble my literature review draft"。
+---
+
+# Review Draft Assembly · 综述初稿组装
+
+## 调用约定（独立运行）
+
+- 输入：综述蓝图（`02_文献/综述蓝图.md`，必需）+ 模块产出（`02_文献/模块/M*.md`，必需）+ 可选深读产物（`02_文献/深读/深读-*.md`）。缺必需项 → 指路先跑 `review-blueprint` / `knowledge-module-gen`。
+- 参数：总字数目标（可选）、引用格式（默认 APA 7th）、输出语言（项目 CLAUDE.md 或用户指定；中英双语 = 先英文 draft 再中文译稿，两稿都要 inline citation）。
+- 落盘：项目内 `02_文献/综述初稿.md`（+ 双语 `-zh.md`）+ 同名 .docx + `02_文献/引用核验报告.md`；项目外当前目录同名。
 
 前置：
 - 综述蓝图.md（必需 · 含框架 + 模块映射 + Section 3 gap）

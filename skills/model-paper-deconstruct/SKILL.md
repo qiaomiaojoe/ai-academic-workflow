@@ -1,13 +1,13 @@
 ---
 name: model-paper-deconstruct
-description: 拆 Model Paper skill（源自 AI学术工作台 06 全文初稿 Step 1，单品化）。用动静虚实 2×2 框架对一篇范文做高密度拆解（≥6000 中文字），四产出：四象限填充表（动虚机制链 ≥5 条）+ 虚实转换三过程轨迹（落到具体小节）+ 三种引用角色清单（锚定/定位/框架 + 承重比例）+ Section→象限功能映射（实测引用数），末尾附反直觉发现与 ≥6 条可借鉴结构技巧。输入一个 PDF 路径或 Zotero 论文标题即可，完全独立可跑。Trigger on："拆这篇 model paper"、"动静虚实拆解"、"拆解这篇范文的结构"、"分析这篇论文的写作结构"、"deconstruct this model paper"、"analyze the structure of this paper for imitation"。
+description: 拆 Model Paper（乔淼PhD · AI学术训练营 · AI学术工作流 · 全文初稿步骤）。用动静虚实 2×2 框架对一篇范文做高密度拆解（≥6000 中文字），四产出：四象限填充表（动虚机制链 ≥5 条）+ 虚实转换三过程轨迹（落到具体小节）+ 三种引用角色清单（锚定/定位/框架 + 承重比例）+ Section→象限功能映射（实测引用数），末尾附反直觉发现与 ≥6 条可借鉴结构技巧。输入一个 PDF 路径或 Zotero 论文标题即可，完全独立可跑。Trigger on："拆这篇 model paper"、"动静虚实拆解"、"拆解这篇范文的结构"、"分析这篇论文的写作结构"、"deconstruct this model paper"、"analyze the structure of this paper for imitation"。
 ---
 
 # Model Paper Deconstruct · 动静虚实四产出（高密度版）
 
 对一篇 Model Paper 做完整拆解，产出 4 个动静虚实产出。
 
-## 单品调用约定（输入解耦）
+## 调用约定（独立运行）
 
 **必填（二选一）**：
 - PDF 路径 → 直接读取该 PDF 全文后再拆解；

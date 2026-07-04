@@ -1,13 +1,13 @@
 ---
 name: data-analysis-round
-description: 数据分析「跑一轮」skill（源自 AI学术工作台 05 数据分析工作流，单品化）。三种分支：定量（调 analyze-quantitative-data，Neuman Ch12）/ 定性（调 analyze-qualitative-data，Neuman Ch14）/ 自定义 skill（完全按该 skill 自身规则执行，不稀释硬约束）。支持多轮多 skill 分析：每轮产出带前缀不覆盖（-R2/-R3）+ 分析日志.md 逐轮记账。RQ/变量/颗粒度可由用户直接给，不依赖研究设计文件。Trigger on："跑一轮定量/定性分析"、"用 XX skill 分析这份数据"、"数据分析工作流"、"分析这份问卷/访谈"、"run a quantitative/qualitative analysis round"、"analyze my data with skill X"。
+description: 数据分析 · 跑一轮（乔淼PhD · AI学术训练营 · AI学术工作流）。三种分支：定量（调 analyze-quantitative-data，Neuman Ch12）/ 定性（调 analyze-qualitative-data，Neuman Ch14）/ 自定义 skill（完全按该 skill 自身规则执行，不稀释硬约束）。支持多轮多 skill 分析：每轮产出带前缀不覆盖（-R2/-R3）+ 分析日志.md 逐轮记账。RQ/变量/颗粒度可由用户直接给，不依赖研究设计文件。Trigger on："跑一轮定量/定性分析"、"用 XX skill 分析这份数据"、"数据分析工作流"、"分析这份问卷/访谈"、"run a quantitative/qualitative analysis round"、"analyze my data with skill X"。
 ---
 
 # Data Analysis Round · 跑一轮（定量 / 定性 / 自定义 skill）
 
 每次调用 = 跑**一轮**分析（多轮/多 skill 不覆盖、有记账）。三个分支：quant（`analyze-quantitative-data`）/ qual（`analyze-qualitative-data`）/ custom（任意用户指定 skill）。
 
-## 单品调用约定（输入解耦）
+## 调用约定（独立运行）
 
 **必填**：数据/材料文件路径（用户给；没有就先要，不开工）。custom 分支还需 skill 名。
 
