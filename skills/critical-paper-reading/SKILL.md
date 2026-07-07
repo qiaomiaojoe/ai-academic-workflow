@@ -1,27 +1,32 @@
 ---
 name: critical-paper-reading
-description: 单篇论文批判性阅读 (critical reading) 技能，基于 UOW (University of Wollongong) Critical Analysis 框架 —— 三层升级 (Description → Analysis → Evaluation) + 四维 interrogation (Content / Authorship / Currency & Quality / Critical Writing Language)。用于乔淼老师 RP 批注、训练营文献讨论、自己读 paper 时产出结构化批注笔记。Trigger on: "critically read this paper", "critique this paper", "批判性阅读", "帮我批注这篇", "RP 批注", "读一下这篇 paper", "deconstruct this paper", "analyze this article critically", "评一下这篇文章".
+description: 单篇论文批判性阅读（乔淼PhD · AI学术训练营 · AI学术工作流 · 文献分析步骤）。基于 UOW (University of Wollongong) Critical Analysis 框架 —— 三层升级 (Description → Analysis → Evaluation) + 四维 interrogation (Content / Authorship / Currency & Quality / Critical Writing Language)，把一篇论文（PDF / Zotero item）拆成结构化的批判性阅读笔记，每条 claim 锚定页码、绝不编造。可独立运行，输入一个 PDF 路径或 Zotero item 即可。Trigger on: "critically read this paper", "critique this paper", "批判性阅读", "帮我批注这篇 paper", "读一下这篇 paper", "deconstruct this paper", "analyze this article critically", "评一下这篇文章".
 ---
 
 # Critical Paper Reading · UOW 框架
 
-基于 **University of Wollongong Academic Skills · Critical Analysis** 框架，把一篇论文（PDF / Zotero item）拆成可教学、可批注、可引用的结构化阅读笔记。
+基于 **University of Wollongong Academic Skills · Critical Analysis** 框架，把一篇论文（PDF / Zotero item）拆成结构化、可引用的批判性阅读笔记。
 
 > 来源：https://www.uow.edu.au/student/support-services/academic-skills/online-resources/assessments/critical-analysis/
+
+## 调用约定（独立运行）
+
+- 输入（按下方 Input Protocol 顺序处理）：PDF 路径 / Zotero item 或 citation key / DOI / URL / 纯文本片段。信息不足时用 `AskUserQuestion` 问，不编造。
+- 落盘：项目内 → `02_文献/深读/深读-{AuthorYear}.md`（此路径下的深读产物会被 `review-draft-assembly` 组装综述初稿时自动并入 Section 2）；项目外 → 当前目录 `./深读/深读-{AuthorYear}.md`；用户只要会话内结果就不落盘。
+- 产出语言：项目 CLAUDE.md 有设定则从之，否则跟随用户。
 
 ## 何时使用 / When to invoke
 
 ✅ **用本技能** 的场景：
-- 给训练营学员的 RP 做批注
-- 读一篇 paper 准备直播/公众号引用
-- 评估一篇文献是否值得收进教学材料
-- 学员问"这篇文章怎么样"、"帮我看看这篇 paper"
-- 自己日常文献阅读，需要稳定的批判性框架
+- 读一篇 paper，需要一份稳定的批判性阅读框架而不是摘要
+- 判断一篇文献是否值得收进文献库 / 后续引用
+- 需要回答"这篇文章怎么样 / 帮我看看这篇 paper"
+- 为综述、讨论准备可引用的批判性句子
 
-❌ **不要用本技能** 的场景（用其它技能）：
-- 写自己的论文 → 用 `academic-paper`
-- 多篇文献的系统综述 / meta-analysis → 用 `deep-research`
-- 模拟期刊审稿人（accept / reject / major revision）→ 用 `academic-paper-reviewer`
+❌ **不要用本技能** 的场景（用其它 skill）：
+- 写自己的论文 → 用 `article-framework` / `fulltext-draft`
+- 多篇文献的系统综述 → 用 `literature-analysis`
+- 拆一篇范文的写作结构（动静虚实）→ 用 `model-paper-deconstruct`
 - 单纯翻译 / 提取 abstract → 用 Read 工具直接处理
 
 ## 核心框架 / The UOW Framework
@@ -95,8 +100,8 @@ UOW 把批判性分析拆成三层，**每一层都必须答**：
 3. **按模板填充**（见下文模板）—— 每条 claim 必须用 in-text 页码 / section 名锚定
 4. **输出**：
    - 在对话中直接给出完整批注
-   - 同时写入文件 `outputs/critical-reads/{first-author-year-keyword}.md`（用 Write 工具；目录不存在就先建）
-5. **Verdict**：给一句话总评 + 是否值得放进训练营/RP 教学材料
+   - 同时按上方「调用约定」落盘（项目内 `02_文献/深读/深读-{AuthorYear}.md`，否则当前目录；用 Write 工具，目录不存在就先建）
+5. **Verdict**：给一句话总评 + 是否值得纳入文献库 / 后续引用
 
 ## 跨切原则 / Cross-cutting Principles
 
@@ -105,7 +110,7 @@ UOW 把批判性分析拆成三层，**每一层都必须答**：
 3. **不只停留在赞美**。如果一篇 paper 在某维度上确实有缺陷，必须说出来 —— 这是批判性阅读的核心。
 4. **区分事实 vs 意见**。作者主张 ≠ 已成立的事实。
 5. **Evaluation 层不能跳过**。如果只产出 Description + Analysis，技能没有完成。
-6. **Verdict 必须给立场**："值得 / 部分值得 / 不值得"放进教学材料，并说明理由。
+6. **Verdict 必须给立场**："值得 / 部分值得 / 不值得"纳入文献库或后续引用，并说明理由。
 
 ## 输出模板 / Output Template
 
@@ -173,7 +178,7 @@ UOW 把批判性分析拆成三层，**每一层都必须答**：
 - Reference list 抽查 (1-2 条 spot check):
 
 ### Dimension 4 · Critical Writing Snippets
-（可直接复用到公众号 / RP 批注 / 训练营 slides 的批判性句子）
+（可直接复用到综述 / 讨论 / 批注的批判性句子）
 - "This is significant because…"
 - "X argues …, however Y suggests …"
 - "Nevertheless, the sample size of N=… limits …"
@@ -185,7 +190,7 @@ UOW 把批判性分析拆成三层，**每一层都必须答**：
 
 **一句话评价**:
 
-**值得放进训练营/RP 教学材料？**  ☐ 值得  ☐ 部分值得（哪些片段）  ☐ 不值得
+**值得纳入文献库 / 后续引用？**  ☐ 值得  ☐ 部分值得（哪些片段）  ☐ 不值得
 
 **理由**:
 
@@ -202,5 +207,5 @@ UOW 把批判性分析拆成三层，**每一层都必须答**：
 技能落地后自测：
 1. 触发测试：「帮我批判性阅读这篇 PDF: <path>」→ 应该看到本技能宣告 + 完整三层四维输出
 2. Zotero 路径：「批注 Zotero 里这篇 [citation_key]」→ 应该走 zotero MCP
-3. 反触发测试：「帮我写一篇论文」「帮我做文献综述」→ **不应该**触发本技能（路由到 academic-paper / deep-research）
-4. 输出文件存在于 `outputs/critical-reads/`
+3. 反触发测试：「帮我写一篇论文」「帮我做文献综述」→ **不应该**触发本技能（路由到 `fulltext-draft` / `literature-analysis`）
+4. 输出文件落在 `02_文献/深读/`（项目内）或当前目录 `./深读/`

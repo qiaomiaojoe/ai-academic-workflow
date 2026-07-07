@@ -71,7 +71,7 @@
 | 步骤级 | [`review-blueprint`](skills/review-blueprint/SKILL.md) | 综述蓝图：模块编排成综述逻辑结构 + 可视化 HTML |
 | 步骤级 | [`research-gap-scan`](skills/research-gap-scan/SKILL.md) | Research Gap 识别：组合扫描 + 三问反驳防伪 gap |
 | 步骤级 | [`knowledge-module-gen`](skills/knowledge-module-gen/SKILL.md) | 知识模块生成：机械抽取 spec + map-reduce 逐篇 + 页码诚实 + 执行日志 |
-| 步骤级 | [`critical-paper-reading`](skills/critical-paper-reading/SKILL.md) | 单篇论文批判性阅读（UOW 框架：Description → Analysis → Evaluation + 四维 interrogation），产出结构化批注；也用于 RP 批注。组装初稿时深读产物自动并入 Section 2 |
+| 步骤级 | [`critical-paper-reading`](skills/critical-paper-reading/SKILL.md) | 单篇论文批判性阅读（UOW 框架：Description → Analysis → Evaluation + 四维 interrogation），产出结构化批注；组装初稿时深读产物自动并入 Section 2 |
 | 步骤级 | [`review-draft-assembly`](skills/review-draft-assembly/SKILL.md) | 综述初稿组装：三 Section 组装 + 引用核验 + 反 AI 味 + docx |
 
 ### 04 · 研究设计
@@ -187,7 +187,7 @@ cp -r ai-academic-workflow/skills/* "${CODEX_HOME:-$HOME/.codex}/skills/"
 - "把这批文献做金字塔分层" → `lit-pyramid`
 - "帮我找这个方向的 research gap" → `research-gap-scan`
 - "我要分析这份调查数据" → `analyze-quantitative-data`；"帮我编码这些访谈" → `analyze-qualitative-data`
-- "批判性阅读这篇 paper" / "帮我做 RP 批注" → `critical-paper-reading`
+- "批判性阅读这篇 paper" / "评一下这篇文章" → `critical-paper-reading`
 - "拆这篇 model paper" → `model-paper-deconstruct`
 - "把这本教科书 PDF 做成 skill" → `skill-forge`
 - "帮我搜文献入 Zotero"（完整任务）→ `literature-search`；"做文献综述" → `literature-analysis`
