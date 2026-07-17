@@ -9,7 +9,7 @@ description: 数据 Skill 工坊 · 源材料 → 成品 skill（乔淼PhD · AI
 
 ## 调用约定（独立运行）
 
-- 最小输入：目标 skill 主题 + 目标 skill 名（小写连字符）+ 源材料（项目 `05_skill源材料/` 或用户给的任意文件/文件夹，不限格式 PDF/md/txt/docx/epub；含 源材料清单.md 时先读它了解各份定位）+ 目标平台（Claude Code / Codex，默认 Claude Code）。源材料文件夹不存在或为空 → 停下提醒先跑 `skill-workshop-plan` 或手动放料。
+- 最小输入：目标 skill 主题 + 目标 skill 名（小写连字符）+ 源材料（`skill源材料/` 或用户给的任意文件/文件夹，不限格式 PDF/md/txt/docx/epub；含 源材料清单.md 时先读它了解各份定位）+ 目标平台（Claude Code / Codex，默认 Claude Code）。源材料文件夹不存在或为空 → 停下提醒先跑 `skill-workshop-plan` 或手动放料。
 - 落盘：全局 skills 目录（Claude Code → `~/.claude/skills/<name>/`；Codex → `${CODEX_HOME:-$HOME/.codex}/skills/<name>/`），**独立于 paper 项目，跨项目复用，不落进项目文件夹**。
 
 ## 全局硬约束

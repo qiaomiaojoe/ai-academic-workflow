@@ -1,6 +1,6 @@
 # AI学术工作流 · 「AI学术训练营」skills 库（乔淼PhD）
 
-> 「**AI学术训练营**」（乔淼PhD）配套的 **AI学术工作流** skills 库：把训练营讲授的完整学术工作流——**选题 → 文献搜索 → 文献分析 → 研究设计 → 数据分析 → 全文初稿**——拆到步骤颗粒度，共 **31 个 skills**。装进 Claude Code / Codex，按任务单独调用，或自由排列组合。
+> 「**AI学术训练营**」（乔淼PhD）配套的 **AI学术工作流** skills 库：把训练营讲授的完整学术工作流——**选题 → 文献搜索 → 文献分析 → 研究设计 → 数据分析 → 全文初稿**——拆到步骤颗粒度，共 **34 个 skills**。装进 Claude Code / Codex，按任务单独调用，或自由排列组合。
 >
 > **谁在用**：AI学术训练营学员
 ---
@@ -11,7 +11,7 @@
 
 | 讲次 | 工作流 | 方法论锚 |
 |------|--------|---------|
-| L1-2 | AI工作台 / 选题 | PXYV 公式 + 四种选题模式 + 贡献阶梯 + 近邻对位 |
+| L1-2 | AI工作台 / 选题 | PXYV 公式 + 7 种选题模式（研究性 4 + 综述性 3 · Snyder 三型）+ 贡献阶梯 + 近邻对位 |
 | L3 | 文献搜索 / 文献分析 | 文献金字塔 + 验真机制 + 综述蓝图 / 知识模块 |
 | L4 | 研究设计 / 写作框架 | 方法地图 + methodology plugin + 动静虚实框架 |
 | L5-L6 | 数据分析 / 造 skill | Neuman 7e Ch12 定量 + Ch14 定性 + skill 制作链路 |
@@ -31,7 +31,7 @@
 
 ---
 
-## Skills 树（31 个）
+## Skills 树（34 个）
 
 按工作流组织。**任务级** skill 是完整任务的入口（内部按序编排步骤级 skills，阶段间停下确认）；**步骤级** skill 单独调用、自由组合。
 
@@ -50,6 +50,9 @@
 | 步骤级 | [`topic-hypothesis-testing`](skills/topic-hypothesis-testing/SKILL.md) | 模式② 假设检验：三阶段选题教练（输出 H 假设链 + 操作化） |
 | 步骤级 | [`topic-concept-construction`](skills/topic-concept-construction/SKILL.md) | 模式③ 概念建构：三阶段选题教练（输出原创概念 + 诠释路径） |
 | 步骤级 | [`topic-method-driven`](skills/topic-method-driven/SKILL.md) | 模式④ 方法驱动：三阶段选题教练（输出 Aims + 双 V 方法计划） |
+| 步骤级 | [`topic-review-systematic`](skills/topic-review-systematic/SKILL.md) | 综述① 系统综述：三阶段选题教练（窄问题 + 纳入排除 + 检索协议 · PRISMA） |
+| 步骤级 | [`topic-review-semisystematic`](skills/topic-review-semisystematic/SKILL.md) | 综述② 半系统/叙事：三阶段选题教练（组织框架 + 研究议程 · RAMESES） |
+| 步骤级 | [`topic-review-integrative`](skills/topic-review-integrative/SKILL.md) | 综述③ 整合式：三阶段选题教练（批判性整合 → 新框架/类型学 · Torraco） |
 | 步骤级 | [`topic-pxyv-parse`](skills/topic-pxyv-parse/SKILL.md) | 已有选题的 PXYV 四维拆分 + 缺口诊断（不重跑三阶段） |
 
 ### 02 · 文献搜索
