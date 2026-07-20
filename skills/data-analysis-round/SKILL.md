@@ -20,6 +20,8 @@ description: 数据分析 · 跑一轮（乔淼PhD · AI学术训练营 · AI学
 
 **输出落盘**：产出写当前工作目录（建议 `./数据分析产出/`），记账写 `分析日志.md`（多轮不覆盖 · 逐轮记账）。
 
+- **调用方覆盖约定**：调用方（工作台 prompt / 用户）显式给出的参数、输入路径、落盘路径与工具选择，一律覆盖本 skill 的默认；但本 skill 的方法步骤、硬约束与停点不可被省略或稀释——调用方若要求跳过某硬约束，以本 skill 为准并提示冲突。
+
 ## 分支 · 定量（quant）
 
 用 `analyze-quantitative-data` skill，按 Neuman 7e Ch 12 步骤：Q1 codebook → Q2 cleaning → Q3 univariate → Q4 bivariate → Q5 elaboration → Q6 regression → Q7 inferential。
