@@ -14,6 +14,7 @@ oa_search.py · 系统综述检索执行器（OpenAlex 主引擎 + Europe PMC �
   epmc       Europe PMC 补充检索（医学健康题目，支持 MeSH）
   rank       records.csv → 按相关度排好序的筛选台账骨架（**只排序不排除**）
   merge      合并分片筛选结果回台账 + 报进度与续跑位置
+  add        手工补充文献进台账（书 / 书章 / 库外经典），found_via=manual
 
 配置文件（JSON，UTF-8）
 {
@@ -23,8 +24,9 @@ oa_search.py · 系统综述检索执行器（OpenAlex 主引擎 + Europe PMC �
     {"name": "采纳",   "terms": ["adoption", "implementation"]}
   ],
   "filters": {"publication_year": "2015-2026", "type": "article", "language": "en"},
-  "sentinels": ["10.1016/j.jik.2025.100682"]
-}
+  "sentinels": ["10.1016/j.jik.2025.100682"],
+  "review_type": "systematic"          // systematic / semi-systematic / integrative
+}                                       // 决定可筛区间、超限处置与终止规则（见 PROFILES）
 
 用法
   python3 oa_search.py probe  -c config.json
@@ -104,7 +106,38 @@ def load_cfg(path):
     cfg.setdefault("field", "title_and_abstract")
     cfg.setdefault("filters", {})
     cfg.setdefault("sentinels", [])
+    rt = str(cfg.get("review_type", "systematic")).strip().lower().replace("_", "-")
+    if rt not in PROFILES:
+        die("review_type 只能是 systematic / semi-systematic / integrative，收到：%s" % rt)
+    cfg["review_type"] = rt
     return cfg
+
+
+# 三型档位：检索内核共用，终止规则与规模预期按型切换
+PROFILES = {
+    "systematic": {
+        "label": "系统综述（PRISMA）", "goal": "穷尽识别全部合格研究",
+        "ok": (30, 3000), "warn": 20000,
+        "over": "偏大但可执行：继续，记一条协议偏离。**不得为压数字而收窄纳入标准或删种子**",
+        "far": "过宽，必须收紧最泛的块或加限制器",
+        "stop": "种子召回 100% + 命中落区间 + 本轮无改动",
+    },
+    "semi-systematic": {
+        "label": "半系统 / 叙事综述（RAMESES）", "goal": "覆盖主要研究传统 / 主题，不追求穷尽",
+        "ok": (30, 3000), "warn": 50000,
+        "over": "对半系统综述是正常的——**不要为了压数字收紧检索式**；改为启用分层抽样筛选，"
+                "并把配额规则（按年份 / 学科 / 传统）写进检索记录",
+        "far": "过宽，建议收紧最泛的块，或缩小时间窗并说明理由",
+        "stop": "传统 / 主题饱和（连续若干批无新主题，且各传统都有代表）",
+    },
+    "integrative": {
+        "label": "整合式综述（Torraco）", "goal": "覆盖构成概念论证所需的文献，有目的抽样合法",
+        "ok": (20, 1000), "warn": 20000,
+        "over": "整合式综述用**有目的抽样**：不必全筛，但必须写明选择标准与理由（否则批判性整合站不住）",
+        "far": "过宽，收紧概念块——整合式综述的语料应当是精选的",
+        "stop": "概念覆盖（概念矩阵每格都有文献）+ 选择理由写清",
+    },
+}
 
 
 def clean_term(t):
@@ -170,17 +203,20 @@ def cmd_probe(cfg, args):
     final = rows[-1][3]
     print("\n最终命中：%s" % format(final, ","))
     print("检索式（可复跑）：%s" % urllib.parse.unquote(",".join(bf + lim)))
+    pf = PROFILES[cfg["review_type"]]
+    lo, hi = pf["ok"]
+    print("综述型：%s · 检索目标：%s" % (pf["label"], pf["goal"]))
     if final == 0:
         print("!! 命中 0：概念块过窄或术语拼写有误，必须改式子重跑。")
-    elif final < 30:
-        print("!! 命中 <30：偏窄，建议给命中最少的块补同义词。")
-    elif final > 20000:
-        print("!! 命中 >20000：过宽，**必须**收紧最泛的块或加限制器，不要直接抓取。")
-    elif final > 3000:
-        print("命中 %s：落在「可执行但偏大」区间（3000–20000）。**直接继续，不要为压数字而改纳入标准**；"
-              "在检索记录里记一条协议偏离说明原因即可。" % format(final, ","))
+    elif final < lo:
+        print("!! 命中 <%d：偏窄，建议给命中最少的块补同义词。" % lo)
+    elif final > pf["warn"]:
+        print("!! 命中 >%s：%s" % (format(pf["warn"], ","), pf["far"]))
+    elif final > hi:
+        print("命中 %s（超出 %d–%d）：%s" % (format(final, ","), lo, hi, pf["over"]))
     else:
-        print("命中数落在可筛区间（30–3000）。")
+        print("命中数落在本型的可筛区间（%d–%d）。" % (lo, hi))
+    print("终止规则（本型）：%s" % pf["stop"])
     print("（未加限制器的组合命中：%s）" % format(final_no_lim, ","))
     return rows
 
@@ -327,14 +363,15 @@ def write_out(rows, out_base, extra_note=""):
 
 def cmd_fetch(cfg, args):
     field, blocks = cfg["field"], cfg["blocks"]
+    pf = PROFILES[cfg["review_type"]]
     filters = [block_filter(field, b) for b in blocks] + base_filters(cfg)
     total = count_of(filters)
-    print("检索式命中 %s 条，开始游标翻页抓取…" % format(total, ","))
-    if total > 20000 and not args.force:
-        die("命中 %s 条 > 20000，先收紧检索式（或加 --force）" % format(total, ","))
-    if total > 3000:
-        print("!! 命中 >3000：属可执行但偏大区间——继续抓取，但必须在检索记录里记一条协议偏离"
-              "（未落入 30–3000，说明原因）。不要因此提高纳入门槛。")
+    print("检索式命中 %s 条，开始游标翻页抓取…（%s）" % (format(total, ","), pf["label"]))
+    if total > pf["warn"] and not args.force:
+        die("命中 %s 条 > %s：%s（确要抓取加 --force）"
+            % (format(total, ","), format(pf["warn"], ","), pf["far"]))
+    if total > pf["ok"][1]:
+        print("!! 超出本型可筛区间 %d–%d：%s" % (pf["ok"][0], pf["ok"][1], pf["over"]))
     rows = pull(filters, blocks, field, cap=args.cap)
     for r in rows:
         r["found_via"] = "database:OpenAlex"
@@ -495,6 +532,65 @@ def cmd_rank(args):
     return out
 
 
+def cmd_add(args):
+    """手工补充文献进台账（书 / 书章 / 数据库外的经典文献）。
+
+    OpenAlex 对专著与书章的覆盖弱于期刊论文——整合式综述尤其容易漏掉最重要的一批。
+    这个口子专门补它，补进来的记录 found_via = manual:<理由>，**在 PRISMA 里单列**。
+    """
+    base = read_csv(args.base)
+    seen = {norm_doi(r.get("doi")) for r in base if norm_doi(r.get("doi"))}
+    seen |= {norm_title(r.get("title")) for r in base if norm_title(r.get("title"))}
+    try:
+        nxt = max(int(r.get("seq") or 0) for r in base) + 1
+    except ValueError:
+        nxt = len(base) + 1
+
+    new = []
+    for d in (args.dois or []):
+        d = norm_doi(d)
+        if not d or d in seen:
+            continue
+        r = oa({"filter": "doi:%s" % d, "per_page": 1, "select": SELECT})
+        if not r["results"]:
+            print("  ! OpenAlex 查不到 %s —— 请改用 --csv 手工填题录（书 / 书章常见）" % d)
+            continue
+        new.append(flatten(r["results"][0], "title_and_abstract", []))
+    if args.csv:
+        for r in read_csv(args.csv):
+            if not (r.get("title") or "").strip():
+                die("--csv 每行至少要有 title：%s" % args.csv)
+            new.append({"uid": norm_doi(r.get("doi")) or norm_title(r.get("title"))[:60],
+                        "doi": norm_doi(r.get("doi")), "title": r.get("title", ""),
+                        "year": r.get("year", ""), "journal": r.get("journal") or r.get("publisher", ""),
+                        "has_abstract": "Y" if (r.get("abstract") or "").strip() else "N",
+                        "n_blocks_hit": "", "oa_url": r.get("oa_url", "")})
+
+    added = []
+    for r in new:
+        k = norm_doi(r.get("doi")) or norm_title(r.get("title"))
+        if k in seen:
+            continue
+        seen.add(k)
+        o = {c: "" for c in SCREEN_COLS}
+        o.update({k2: r.get(k2, "") for k2 in
+                  ("uid", "doi", "title", "year", "journal", "has_abstract", "n_blocks_hit", "oa_url")})
+        o["seq"] = nxt
+        o["found_via"] = "manual:%s" % (args.reason or "手工补充")
+        nxt += 1
+        added.append(o)
+    if not added:
+        print("没有新增（都已在台账里，或都没查到）。")
+        return base
+    write_screen(base + added, args.base)
+    print("手工补充 %d 条 → %s（found_via=manual，seq 从 %d 起）"
+          % (len(added), args.base, added[0]["seq"]))
+    for r in added:
+        print("  + %s %s" % (r.get("year") or "____", (r.get("title") or "")[:70]))
+    print("这些记录走同样的筛选流程；**PRISMA 里要单列为「其他方法识别的记录」，不要混进数据库检索命中数。**")
+    return base + added
+
+
 def cmd_merge(args):
     """把分片写回的筛选结果合并进台账，并报进度与续跑位置。"""
     base = read_csv(args.base)
@@ -637,9 +733,14 @@ def main():
     mg = sub.add_parser("merge", help="合并分片筛选结果 + 报进度与续跑位置")
     mg.add_argument("-b", "--base", required=True)
     mg.add_argument("-p", "--parts", nargs="+", required=True)
+    ad = sub.add_parser("add", help="手工补充文献进台账（书 / 书章 / 库外经典），found_via=manual")
+    ad.add_argument("-b", "--base", required=True)
+    ad.add_argument("--dois", nargs="*", help="有 DOI 的走 OpenAlex 取题录")
+    ad.add_argument("--csv", help="手工题录 CSV，至少含 title 列（可含 doi/year/journal/publisher/oa_url）")
+    ad.add_argument("--reason", help="补充理由，写进 found_via，如「Torraco 概念奠基专著」")
     args = ap.parse_args()
 
-    if not MAILTO and args.cmd in ("probe", "recall", "fetch", "cite", "epmc"):
+    if not MAILTO and args.cmd in ("probe", "recall", "fetch", "cite", "epmc", "add"):
         sys.stderr.write("[oa_search] 提示：未设 OPENALEX_MAILTO，未进礼貌池，量大时可能限流。\n")
     if args.cmd == "epmc":
         cmd_epmc(args)
@@ -649,6 +750,9 @@ def main():
         return
     if args.cmd == "merge":
         cmd_merge(args)
+        return
+    if args.cmd == "add":
+        cmd_add(args)
         return
     cfg = load_cfg(args.config)
     {"probe": cmd_probe, "recall": cmd_recall, "fetch": cmd_fetch, "cite": cmd_cite}[args.cmd](cfg, args)
