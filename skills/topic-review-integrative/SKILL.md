@@ -48,7 +48,7 @@ review_type: integrative
 RQ: [综述问题 / 要造的框架方向]
 P: [用来重构的理论视角] | X: [被整合的现象/概念群] | Y: [领域·多传统边界] | V: [新概念框架/类型学]
 report_standard: Torraco2005
-analysis_route: 04-data-analysis
+analysis_route: rv-synthesis
 neighbors: [近邻综述1; 2; 3]
 -->
 ```

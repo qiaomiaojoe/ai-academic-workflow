@@ -46,7 +46,7 @@ review_type: semi-systematic
 RQ: [组织性问题]
 P: [组织性视角/元叙事] | X: [被梳理的主题/研究体] | Y: [跨学科领域·时间窗] | V: [脉络图/主题/研究议程]
 report_standard: RAMESES
-analysis_route: 04-data-analysis
+analysis_route: rv-synthesis
 neighbors: [近邻综述1; 2; 3]
 -->
 ```

@@ -407,9 +407,12 @@ def cmd_cite(cfg, args):
 # ---------------------------------------------------------------- rank / merge（筛选台账）
 
 SCREEN_COLS = ["seq", "uid", "doi", "title", "year", "journal", "has_abstract", "n_blocks_hit",
-               "found_via", "pass1", "ai_decision", "ai_reason",
+               "found_via", "oa_url", "pass1", "ai_decision", "ai_reason",
+               "pdf_status", "ft_decision", "ft_reason",
                "reviewer_1", "reviewer_2", "final_decision", "note"]
-DECISION_COLS = ["pass1", "ai_decision", "ai_reason"]
+# AI 可写：题摘筛选 + 全文获取状态 + 全文筛选建议
+DECISION_COLS = ["pass1", "ai_decision", "ai_reason", "pdf_status", "ft_decision", "ft_reason"]
+# 只能人填
 HUMAN_COLS = ["reviewer_1", "reviewer_2", "final_decision", "note"]
 
 
@@ -479,7 +482,8 @@ def cmd_rank(args):
     for i, r in enumerate(rows, 1):
         o = {c: "" for c in SCREEN_COLS}
         o.update({k: r.get(k, "") for k in
-                  ("uid", "doi", "title", "year", "journal", "has_abstract", "n_blocks_hit", "found_via")})
+                  ("uid", "doi", "title", "year", "journal", "has_abstract", "n_blocks_hit",
+                   "found_via", "oa_url")})
         o["seq"] = i
         out.append(o)
     write_screen(out, args.out)
@@ -531,15 +535,36 @@ def cmd_merge(args):
     done = [r for r in base if r.get("ai_decision")]
     todo = [r for r in base if not r.get("ai_decision")]
     dist = collections.Counter(r["ai_decision"] for r in done)
-    print("\n筛选进度：%d / %d（%.1f%%）  合并了 %d 份分片、%d 条判定"
+    print("\n① 题摘筛选：%d / %d（%.1f%%）  合并了 %d 份分片、%d 条判定"
           % (len(done), len(base), 100.0 * len(done) / max(len(base), 1), len(parts), applied))
     for k in ("include", "exclude", "unclear"):
-        print("  %-8s %d" % (k, dist.get(k, 0)))
+        print("   %-8s %d" % (k, dist.get(k, 0)))
     if todo:
         nxt = todo[0]
-        print("**未筛 %d 条。续跑从 seq=%s 起**（uid=%s）。" % (len(todo), nxt.get("seq"), nxt.get("uid")))
+        print("   **未筛 %d 条。续跑从 seq=%s 起**（uid=%s）。" % (len(todo), nxt.get("seq"), nxt.get("uid")))
+        return base
+    print("   **题摘全部筛完。**")
+
+    # 进入全文阶段的候选 = include + unclear（unclear 一律保留到全文判定）
+    ft_pool = [r for r in base if r.get("ai_decision") in ("include", "unclear")]
+    ft_done = [r for r in ft_pool if r.get("ft_decision")]
+    ft_dist = collections.Counter(r["ft_decision"] for r in ft_done)
+    pdf_dist = collections.Counter(r.get("pdf_status", "") for r in ft_pool if r.get("pdf_status"))
+    print("\n② 全文阶段：候选 %d 条（include %d + unclear %d）"
+          % (len(ft_pool), dist.get("include", 0), dist.get("unclear", 0)))
+    if pdf_dist:
+        print("   全文获取：" + "、".join("%s %d" % (k, v) for k, v in pdf_dist.most_common()))
+    print("   全文筛选：%d / %d" % (len(ft_done), len(ft_pool)))
+    for k in ("include", "exclude", "unclear"):
+        if ft_dist.get(k):
+            print("     %-8s %d" % (k, ft_dist[k]))
+    ft_todo = [r for r in ft_pool if not r.get("ft_decision")]
+    if ft_todo:
+        print("   **待全文判定 %d 条。续跑从 seq=%s 起**（uid=%s）。"
+              % (len(ft_todo), ft_todo[0].get("seq"), ft_todo[0].get("uid")))
     else:
-        print("**全部筛完。** 可以进入引文追踪（cite）与出表（第 6 步）。")
+        print("   **全文筛选也已完成。** PRISMA 的全文评估 / 全文排除 / 最终纳入数可以对账出表了。")
+    print("\n注意：ft_decision 仍是 AI 建议；final_decision 由人填（本脚本拒绝 AI 写入）。")
     return base
 
 

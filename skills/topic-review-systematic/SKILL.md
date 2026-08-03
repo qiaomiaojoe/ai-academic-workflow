@@ -46,7 +46,7 @@ review_type: systematic
 RQ: [综述问题]
 P: [统摄问题的理论/效应关系] | X: [被检验的现象/干预] | Y: [领域·纳入边界] | V: [效应证据/现状定论]
 report_standard: PRISMA
-analysis_route: 04-data-analysis
+analysis_route: rv-synthesis
 neighbors: [近邻综述1; 2; 3]
 -->
 ```
