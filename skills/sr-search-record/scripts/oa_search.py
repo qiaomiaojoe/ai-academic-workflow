@@ -324,14 +324,22 @@ def flatten(w, field, blocks):
     }
 
 
-def pull(filters, blocks, field, cap=0):
+def pull(filters, blocks, field, cap=0, stats=None):
+    """翻页抓取并去重。stats 传入一个 dict 时回填：
+       raw      = 实际遍历过的原始记录数（不是 meta.count）
+       dups     = 因同 DOI / 同题名被去掉的条数
+       truncated= 是否因 cap 提前停止（此时"没抓到的"不等于"重复的"）"""
     out, cursor, seen = [], "*", set()
+    raw = dups = 0
+    truncated = False
     while True:
         d = oa({"filter": ",".join(filters), "per_page": 200, "cursor": cursor, "select": SELECT})
         for w in d["results"]:
+            raw += 1
             r = flatten(w, field, blocks)
             key = r["doi"] or norm_title(r["title"])
             if key in seen:
+                dups += 1
                 continue
             seen.add(key)
             out.append(r)
@@ -339,7 +347,10 @@ def pull(filters, blocks, field, cap=0):
         if not cursor or not d["results"]:
             break
         if cap and len(out) >= cap:
+            truncated = True
             break
+    if stats is not None:
+        stats.update({"raw": raw, "dups": dups, "truncated": truncated})
     return out
 
 
@@ -372,15 +383,28 @@ def cmd_fetch(cfg, args):
             % (format(total, ","), format(pf["warn"], ","), pf["far"]))
     if total > pf["ok"][1]:
         print("!! 超出本型可筛区间 %d–%d：%s" % (pf["ok"][0], pf["ok"][1], pf["over"]))
-    rows = pull(filters, blocks, field, cap=args.cap)
+    st = {}
+    rows = pull(filters, blocks, field, cap=args.cap, stats=st)
     for r in rows:
         r["found_via"] = "database:OpenAlex"
     n_ab = sum(1 for r in rows if r["has_abstract"] == "Y")
     write_out(rows, args.out)
     print("摘要覆盖：%d/%d (%.0f%%)；无摘要的不得据题名排除，保留到全文阶段。"
           % (n_ab, len(rows), 100.0 * n_ab / max(len(rows), 1)))
-    print("PRISMA · Identification：数据库检索命中 %s，去重后待筛 %d（差 %d 为同 DOI/同题名重复）"
-          % (format(total, ","), len(rows), total - len(rows)))
+    if st.get("truncated"):
+        print("!! 抓取被 --cap %d 截断：只遍历了前 %s 条（其中同 DOI/同题名重复 %d 条），"
+              "检索式实际命中 %s 条，**还有约 %s 条没抓**。"
+              % (args.cap, format(st["raw"], ","), st["dups"],
+                 format(total, ","), format(max(total - st["raw"], 0), ",")))
+        print("!! 没抓到的那部分**不是去重差额，不得写进 PRISMA**。"
+              "PRISMA 的 Identification / 去重 / 待筛三个数必须用不带 --cap 的完整抓取产生；"
+              "本次结果只能当试跑样本用。")
+    else:
+        print("PRISMA · Identification：数据库检索命中 %s，遍历 %s 条，去重删除 %d 条（同 DOI/同题名），去重后待筛 %d 条"
+              % (format(total, ","), format(st.get("raw", len(rows)), ","), st.get("dups", 0), len(rows)))
+        if st.get("raw") is not None and st["raw"] != total:
+            print("   注：API 报的命中数（%s）与实际遍历数（%s）差 %d 条——写方法节时以**遍历数**为准并说明差异（OpenAlex 的 meta.count 是估算值，翻页时可能有出入）。"
+                  % (format(total, ","), format(st["raw"], ","), abs(total - st["raw"])))
     return rows
 
 
@@ -719,7 +743,8 @@ def main():
         s.add_argument("--dois-file")
         s.add_argument("--known-csv")
         s.add_argument("--min-blocks", type=int, default=2)
-        s.add_argument("--cap", type=int, default=0)
+        s.add_argument("--cap", type=int, default=0,
+                       help="只抓前 N 条（试跑用）。加了 cap 的结果不得用来算 PRISMA 数字")
         s.add_argument("--force", action="store_true")
     e = sub.add_parser("epmc")
     e.add_argument("-q", "--query", required=True)
