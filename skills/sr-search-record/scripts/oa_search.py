@@ -791,6 +791,18 @@ def cmd_import(args):
     elif args.hits > len(parsed):
         print("!! 该库命中 %d 条，但只导出/解析了 %d 条——差额要在方法节说明（导出上限？只取前 N 页？）。"
               % (args.hits, len(parsed)))
+    # —— 完整度体检：字段大面积缺失通常意味着导出格式 / 字段选错了 ——
+    if added:
+        miss = {k: sum(1 for r in added if not (r.get(k) or "").strip())
+                for k in ("journal", "year", "doi")}
+        bad = {k: v for k, v in miss.items() if v > 0.3 * len(added)}
+        if bad:
+            print("!! 导入记录的字段大面积缺失：%s（共 %d 条）。"
+                  % ("、".join("%s 缺 %d" % (k, v) for k, v in bad.items()), len(added)))
+            print("   多半是导出时字段没选全或格式选错了——回去用带完整题录的格式重导（CNKI 选 RefWorks / "
+                  "EndNote，WoS / Scopus 选 RIS / BibTeX），否则筛选与特征表都会缺料。"
+                  "已导入的记录不会被后续导入覆盖，要修正得先删掉这批再重导。")
+
     print("这些记录 **ai_decision 为空**，要和数据库检索的记录走同一套标准筛完；"
           "**PRISMA 按 found_via 分源报数，不得把 external:* 混进 OpenAlex 的命中数。**")
     return base + added
