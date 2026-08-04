@@ -1,6 +1,6 @@
 ---
 name: sr-search-record
-description: 综述文章的检索与筛选记录（乔淼PhD · AI学术训练营 · AI学术工作流 · 综述文章工作台 阶段②）。**Snyder 三型通用**——系统 / 半系统·叙事 / 整合式共用一套检索内核，按 选题.md 锚块的 review_type 切换终止规则与产出档位。AI 全自动跑完文献检索：概念块拆解 → 检索式多轮自动校准（种子文献召回 100% 才收敛）→ 全量抓取去重 → 题摘筛选建议 → 引文追踪补漏 → 全文获取与全文筛选（PDF 落盘 + Zotero 入库，调 lit-pdf-zotero 但不建金字塔）→ 产出论文可直接贴的三张表（检索记录表 S1–Sn 带命中数 / 纳入排除标准表 / PRISMA 流程四个数字）+ 待人工复核清单。检索引擎用 OpenAlex 开放 API（免登录免密钥，随 skill 附 scripts/oa_search.py），医学题目补 Europe PMC（MeSH）。AI 只出筛选建议不当第二评审。Trigger on："跑系统综述的文献检索"、"半系统 / 叙事综述建语料库"、"整合式综述选文献"、"自动检索并筛选文献"、"生成检索记录表和 PRISMA 数字"、"systematic review search"、"build the corpus for my narrative / integrative review"、"run the search and screening for my review"。
+description: 综述文章的检索与筛选记录（乔淼PhD · AI学术训练营 · AI学术工作流 · 综述文章工作台 阶段②）。**Snyder 三型通用**——系统 / 半系统·叙事 / 整合式共用一套检索内核，按 选题.md 锚块的 review_type 切换终止规则与产出档位。AI 全自动跑完文献检索：概念块拆解 → 检索式多轮自动校准（种子文献召回 100% 才收敛）→ 全量抓取去重 → 题摘筛选建议 → 引文追踪补漏 → 外部检索源导入（CNKI / WoS / Scopus 人工检索的导出题录，import 子命令自动识别 RIS/EndNote/RefWorks/BibTeX/CSV，跨源去重 + 信息源登记）→ 全文获取与全文筛选（PDF 落盘 + Zotero 入库，调 lit-pdf-zotero 但不建金字塔）→ 产出论文可直接贴的三张表（检索记录表 S1–Sn 带命中数 / 纳入排除标准表 / PRISMA 流程四个数字）+ 待人工复核清单。检索引擎用 OpenAlex 开放 API（免登录免密钥，随 skill 附 scripts/oa_search.py），医学题目补 Europe PMC（MeSH）。AI 只出筛选建议不当第二评审。Trigger on："跑系统综述的文献检索"、"半系统 / 叙事综述建语料库"、"整合式综述选文献"、"自动检索并筛选文献"、"生成检索记录表和 PRISMA 数字"、"systematic review search"、"build the corpus for my narrative / integrative review"、"run the search and screening for my review"。
 ---
 
 # SR Search Record · 综述文章的检索与筛选记录
@@ -111,7 +111,7 @@ python3 <skill>/scripts/oa_search.py fetch -c RV_综述/02_检索筛选/检索�
 
 - 医学 / 健康 / 护理：Europe PMC（支持 MeSH）
   `oa_search.py epmc -q '(MESH:"Artificial Intelligence") AND (MESH:"Education, Nursing")' -o RV_综述/02_检索筛选/epmc`
-- 中文文献：**本 skill 的自动检索不覆盖中文核心期刊**。OpenAlex 的覆盖来自 Crossref DOI，而 CNKI 系核心刊基本不注册 DOI——实测《中国电化教育》在 OpenAlex 只有 915 条（该刊年发文两百余篇）、AI 主题命中 10 条，《电化教育研究》8 条，《中国高教研究》2 条，且多无 DOI、无摘要，概念块检索几乎召回不到；加 `language:zh` 跑出来的主要是有 Crossref DOI 的开放获取刊，不是核心期刊。**要做中文综述，须另行人工检索 CNKI / 万方 / 维普并如实写进方法节**（可把导出的题录用 `add` 子命令并进台账，`found_via=cnki:<检索式>`，PRISMA 里单列为一个信息源）。不要把 OpenAlex 的中文命中当成中文数据库检索的替代。
+- 中文文献：**本 skill 的自动检索不覆盖中文核心期刊**。OpenAlex 的覆盖来自 Crossref DOI，而 CNKI 系核心刊基本不注册 DOI——实测《中国电化教育》在 OpenAlex 只有 915 条（该刊年发文两百余篇）、AI 主题命中 10 条，《电化教育研究》8 条，《中国高教研究》2 条，且多无 DOI、无摘要，概念块检索几乎召回不到；加 `language:zh` 跑出来的主要是有 Crossref DOI 的开放获取刊，不是核心期刊。**要做中文综述，走第 4.2d 步「外部检索源导入」**：你在 CNKI 跑检索、导出题录（RefWorks / EndNote 格式），`import` 子命令把它并进台账并登记信息源，之后与自动检索的记录走同一套筛选。不要把 OpenAlex 的中文命中当成中文数据库检索的替代。
 - 灰色文献 / 政策报告：WebSearch，**单列来源，不与数据库检索混算**
 
 ### 第 4 步 · 题摘筛选（连续跑，AI 出建议）
@@ -156,6 +156,28 @@ python3 <skill>/scripts/oa_search.py add -b RV_综述/02_检索筛选/筛选决�
 ```
 
 补进来的记录 `found_via = manual:<理由>`，走同样的筛选流程，**PRISMA / 选择流程说明里单列为「其他方法识别的记录」，不得混进数据库检索命中数**。
+
+**4.2d 外部检索源导入（人工检索 + `import` 导入）**
+
+OpenAlex 覆盖不到的库——**中文核心期刊（CNKI / 万方 / 维普）、商业库独有条目（WoS / Scopus / EBSCO）、灰色文献**——走这个口子进来。人做检索，AI 做导入、去重、记账与筛选：
+
+1. **人**在目标库跑检索，把三样东西记下来：**该库的检索式（原样）、检索日期、页面显示的命中总数**；然后导出题录（CNKI 选 RefWorks 或 EndNote 格式；WoS / Scopus 选 RIS 或 BibTeX；也支持 CSV）。
+2. **AI** 导入台账：
+
+```bash
+python3 <skill>/scripts/oa_search.py import -b RV_综述/02_检索筛选/筛选决定.csv \
+  -f 导出/cnki.txt 导出/wos.ris --source CNKI --hits 1863 \
+  --query "SU=('人工智能'+'生成式人工智能') AND SU='高等教育'"
+```
+
+- 格式**自动识别**（RIS / EndNote(Refer) / RefWorks / BibTeX / CSV），可一次给多个文件。
+- **跨源去重**：按 DOI，无 DOI 用归一化题名；与台账已有记录、以及本批内部的重复都会去掉并报数。
+- 记录写 `found_via = external:<源名>`，`ai_decision` 留空——**和数据库检索的记录走同一套标准筛完，不因来源不同放宽或收紧**。
+- 每次导入会往台账同目录的 `外部检索源.json` **追加一条信息源登记**（源 / 检索式 / 日期 / 该库命中总数 / 解析数 / 去重数 / 实际导入数）——第 7 步的检索记录表和 PRISMA 按源分行就靠它。
+- 先 `rank` 建台账、再 `import`；**反过来会丢数据**（`rank` 检测到台账里有 `external:*` 记录会拒绝执行，除非 `--overwrite`）。
+- 命中总数 > 导出条数时脚本会警告——差额（导出上限、只取前 N 页、只导了某几年）**必须在方法节说明**，不许当作不存在。
+
+**这条路径让「多库检索」成为如实的陈述**：方法节写"检索 OpenAlex + CNKI + Web of Science"，每个库的检索式、日期、命中数都在登记里，可复现、可对账。**不要反过来把外部记录混进 OpenAlex 的命中数冒充自动检索的结果。**
 
 **4.3 合并 + 报进度**
 
@@ -227,10 +249,11 @@ PDF 落 `RV_综述/02_检索筛选/pdf_download/`（命名 `AuthorYear.pdf`）�
 
 1. **检索记录表** → `RV_综述/02_检索筛选/检索记录.md`
    `| # | 概念块 / 步骤 | 内容 | 命中数 |` 的 S1–Sn 表（`probe` 直接给），加上：检索日期、检索源、完整可复跑检索式、限制器及理由、迭代过程（第 2 步每轮）。
+   **有外部检索源时**（第 4.2d 步）：读 `外部检索源.json`，每个源单独一段——源名、该库原样检索式、检索日期、页面命中总数、导出/解析条数、去重后导入条数；命中总数与导出数有差额的写明原因。**每个库的检索式各写各的，不要把 OpenAlex 的式子说成在 CNKI 上跑过。**
 2. **纳入 / 排除标准表** → `RV_综述/02_检索筛选/纳入排除标准.md`
    `| 维度 | 纳入 | 排除 |`，维度如可得性、样本、学科、研究设计、文献类型、语言、年份。
 3. **PRISMA 流程数字** → `RV_综述/02_检索筛选/PRISMA流量.md`
-   识别（各源命中数）→ 去重删除数 → 待筛数 → 题摘排除数 → 全文评估数（= 第 6 步 `ft_decision` 非空数）→ 全文未获取数（`pdf_status=not-retrieved`，单列，不算排除）→ 全文排除数（按 `ft_reason` 分组）→ 最终纳入数。**每个数字标出从哪张表哪一列反算得来**；对不上就停下报错。
+   识别（**按 `found_via` 分源报数**：`database:OpenAlex` / 每个 `external:<源>` / `citation:*` / `manual:*` 各一行，外部源的"识别数"用 `外部检索源.json` 里该库的命中总数，并注明实际导入数）→ 去重删除数 → 待筛数 → 题摘排除数 → 全文评估数（= 第 6 步 `ft_decision` 非空数）→ 全文未获取数（`pdf_status=not-retrieved`，单列，不算排除）→ 全文排除数（按 `ft_reason` 分组）→ 最终纳入数。**每个数字标出从哪张表哪一列反算得来**；对不上就停下报错。
 4. **待人工复核清单** → `RV_综述/02_检索筛选/待复核.md`
    只列人真正要看的：全文阶段的 `ft_decision = include` 与 `unclear`（各带 AI 理由与 PDF 状态）——题摘层的 include 已经过了全文这一关，不必重列，加一节「需要你确认的三件事」——① 概念块是否漏了本学科行话；② 是否需要去 Scopus / WoS 复核一次纳入集（投保守期刊时）；③ 边界记录的裁决。
 

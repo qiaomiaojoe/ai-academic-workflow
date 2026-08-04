@@ -498,13 +498,20 @@ def cmd_rank(args):
     """
     if os.path.exists(args.out) and not args.overwrite:
         try:
-            done = sum(1 for r in read_csv(args.out) if r.get("ai_decision"))
+            old_rows = read_csv(args.out)
         except Exception:  # noqa: BLE001
-            done = 0
+            old_rows = []
+        done = sum(1 for r in old_rows if r.get("ai_decision"))
+        ext = sum(1 for r in old_rows if (r.get("found_via") or "").startswith("external:"))
         if done:
             die("台账 %s 已存在且已有 %d 条判定——重跑 rank 会把它们清空。\n"
                 "  续跑筛选：直接从第一条 ai_decision 为空的记录接着筛，不要重跑 rank。\n"
                 "  确实要重建：加 --overwrite（先备份）。" % (args.out, done))
+        if ext:
+            die("台账 %s 里有 %d 条外部检索导入的记录（found_via=external:*）——"
+                "它们不在 records.csv 里，重跑 rank 会把它们**永久丢掉**。\n"
+                "  正常做法：先 rank 建台账，再 import 导入外部记录。\n"
+                "  确实要重建：加 --overwrite（先备份台账），重建后重新 import 一次。" % (args.out, ext))
     src = []
     for p in args.inputs:
         if not os.path.exists(p):
@@ -612,6 +619,180 @@ def cmd_add(args):
     for r in added:
         print("  + %s %s" % (r.get("year") or "____", (r.get("title") or "")[:70]))
     print("这些记录走同样的筛选流程；**PRISMA 里要单列为「其他方法识别的记录」，不要混进数据库检索命中数。**")
+    return base + added
+
+
+# ---------------------------------------------------------------- import（外部检索源）
+
+def _ris_like(text, tagmap, tag_re):
+    """解析 RIS / Refer(EndNote) / RefWorks 这类「每行一个标签」的题录格式。"""
+    recs, cur = [], {}
+    for raw in text.splitlines():
+        line = raw.rstrip("\n\r")
+        m = tag_re.match(line)
+        if not m:
+            if cur and line.strip() and cur.get("_last"):      # 续行接到上一字段
+                cur[cur["_last"]] = (cur.get(cur["_last"], "") + " " + line.strip()).strip()
+            continue
+        tag, val = m.group(1).strip(), (m.group(2) or "").strip()
+        key = tagmap.get(tag)
+        if tag in ("TY", "%0", "RT") and cur:                  # 新记录开始
+            recs.append(cur); cur = {}
+        if key:
+            if key == "authors":
+                cur[key] = (cur.get(key, "") + "; " + val).strip("; ")
+            elif key in cur and key == "abstract":
+                cur[key] = cur[key] + " " + val
+            else:
+                cur.setdefault(key, val)
+            cur["_last"] = key
+        elif tag in ("ER",):
+            if cur:
+                recs.append(cur); cur = {}
+    if cur:
+        recs.append(cur)
+    return [{k: v for k, v in r.items() if k != "_last"} for r in recs]
+
+
+RIS_MAP = {"TI": "title", "T1": "title", "AB": "abstract", "N2": "abstract", "AU": "authors",
+           "PY": "year", "Y1": "year", "DA": "year", "JO": "journal", "JF": "journal",
+           "T2": "journal", "DO": "doi", "UR": "oa_url"}
+REFER_MAP = {"%T": "title", "%X": "abstract", "%A": "authors", "%D": "year",
+             "%J": "journal", "%R": "doi", "%U": "oa_url"}
+REFWORKS_MAP = {"T1": "title", "AB": "abstract", "A1": "authors", "YR": "year",
+                "JF": "journal", "DO": "doi", "LK": "oa_url"}
+
+
+def parse_records(path):
+    """按内容自动识别格式，解析成 dict 列表。支持 RIS / EndNote(Refer) / RefWorks / BibTeX / CSV。"""
+    with open(path, encoding="utf-8-sig", errors="replace") as f:
+        text = f.read()
+    head = text[:4000]
+    if path.lower().endswith(".csv") or (head.count(",") > 5 and re.match(r"^[^\n]*title[^\n]*\n", head, re.I)):
+        rows = read_csv(path)
+        norm = []
+        for r in rows:
+            low = {(k or "").strip().lower(): (v or "") for k, v in r.items()}
+            norm.append({"title": low.get("title") or low.get("题名") or low.get("篇名") or "",
+                         "doi": low.get("doi") or low.get("DOI".lower()) or "",
+                         "year": low.get("year") or low.get("年") or low.get("发表时间") or "",
+                         "journal": low.get("journal") or low.get("source") or low.get("来源") or low.get("期刊") or "",
+                         "abstract": low.get("abstract") or low.get("摘要") or "",
+                         "authors": low.get("authors") or low.get("author") or low.get("作者") or "",
+                         "oa_url": low.get("url") or low.get("oa_url") or ""})
+        return norm, "CSV"
+    if re.search(r"^\s*@\w+\s*\{", head, re.M):
+        recs = []
+        for blk in re.findall(r"@\w+\s*\{(.*?)\n\}", text, re.S):
+            d = {}
+            for k, v in re.findall(r"(\w+)\s*=\s*[{\"](.*?)[}\"]\s*,?\s*\n", blk + "\n", re.S):
+                k = k.lower().strip()
+                v = re.sub(r"\s+", " ", v).strip().strip("{}")
+                if k == "title": d["title"] = v
+                elif k in ("journal", "booktitle"): d["journal"] = v
+                elif k == "year": d["year"] = v
+                elif k == "doi": d["doi"] = v
+                elif k == "abstract": d["abstract"] = v
+                elif k == "author": d["authors"] = v
+                elif k == "url": d["oa_url"] = v
+            if d.get("title"):
+                recs.append(d)
+        return recs, "BibTeX"
+    if re.search(r"^%0\s", head, re.M) or re.search(r"^%T\s", head, re.M):
+        return _ris_like(text, REFER_MAP, re.compile(r"^(%[0A-Za-z])\s+(.*)$")), "EndNote/Refer（CNKI 常见）"
+    if re.search(r"^RT\s", head, re.M) or re.search(r"^A1\s", head, re.M):
+        return _ris_like(text, REFWORKS_MAP, re.compile(r"^([A-Z][A-Z0-9])\s+(.*)$")), "RefWorks（CNKI 常见）"
+    if re.search(r"^TY\s+-\s", head, re.M) or re.search(r"^T1\s+-\s", head, re.M):
+        return _ris_like(text, RIS_MAP, re.compile(r"^([A-Z][A-Z0-9])\s+-\s?(.*)$")), "RIS"
+    die("认不出 %s 的题录格式。支持 RIS / EndNote(Refer, %%0 %%T) / RefWorks(RT A1 T1) / BibTeX / CSV；"
+        "CNKI 请导出为 RefWorks 或 EndNote 格式，WoS / Scopus 导出 RIS 或 BibTeX。" % path)
+
+
+def cmd_import(args):
+    """把**外部数据库人工检索**导出的题录导入台账（CNKI / WoS / Scopus / PubMed / 手工清单均可）。
+
+    OpenAlex 覆盖不到的库（中文核心刊、商业库独有条目、灰色文献）走这个口子进来，
+    与自动检索的记录**同台账、同标准、同一套筛选流程**，但 found_via 标成 external:<源>，
+    PRISMA 里按源单列——这样"多库检索"是如实的，不是假装 OpenAlex 搜到的。
+    """
+    base = read_csv(args.base)
+    seen = {norm_doi(r.get("doi")) for r in base if norm_doi(r.get("doi"))}
+    seen |= {norm_title(r.get("title")) for r in base if norm_title(r.get("title"))}
+    try:
+        nxt = max(int(r.get("seq") or 0) for r in base) + 1
+    except ValueError:
+        nxt = len(base) + 1
+
+    parsed, fmts, added, dups, no_title = [], [], [], 0, 0
+    for path in args.file:
+        recs, fmt = parse_records(path)
+        fmts.append("%s（%s，%d 条）" % (os.path.basename(path), fmt, len(recs)))
+        parsed.extend(recs)
+
+    for r in parsed:
+        title = (r.get("title") or "").strip()
+        if not title:
+            no_title += 1
+            continue
+        doi = norm_doi(r.get("doi"))
+        k = doi or norm_title(title)
+        if k in seen:                       # 与台账已有记录、或本批内部重复
+            dups += 1
+            continue
+        seen.add(k)
+        ym = re.search(r"(19|20)\d{2}", str(r.get("year") or ""))
+        o = {c: "" for c in SCREEN_COLS}
+        o.update({"seq": nxt, "uid": doi or norm_title(title)[:60], "doi": doi, "title": title,
+                  "year": ym.group(0) if ym else "",
+                  "journal": (r.get("journal") or "").strip(),
+                  "has_abstract": "Y" if (r.get("abstract") or "").strip() else "N",
+                  "n_blocks_hit": "", "oa_url": (r.get("oa_url") or "").strip(),
+                  "found_via": "external:%s" % args.source})
+        nxt += 1
+        added.append(o)
+
+    print("解析：%s" % "；".join(fmts))
+    print("共解析 %d 条 | 无题名跳过 %d | 重复去掉 %d（与台账已有记录 或 本批内部重复）| **新增 %d**"
+          % (len(parsed), no_title, dups, len(added)))
+    if args.dry_run:
+        print("（--dry-run：没有写盘。）")
+        for r in added[:10]:
+            print("  + %s %s" % (r.get("year") or "____", (r.get("title") or "")[:70]))
+        return base
+
+    if added:
+        write_screen(base + added, args.base)
+        print("已写入 %s（seq 从 %d 起，found_via=external:%s）" % (args.base, added[0]["seq"], args.source))
+    else:
+        print("没有新增，台账未改动。")
+
+    # —— 信息源登记（PRISMA 要按源报数）——
+    reg_path = args.reg or os.path.join(os.path.dirname(os.path.abspath(args.base)) or ".", "外部检索源.json")
+    reg = []
+    if os.path.exists(reg_path):
+        try:
+            with open(reg_path, encoding="utf-8") as f:
+                reg = json.load(f)
+        except Exception:
+            reg = []
+    reg.append({"source": args.source, "query": args.query,
+                "date": args.date or time.strftime("%Y-%m-%d"),
+                "reported_hits": args.hits if args.hits is not None else None,
+                "files": [os.path.basename(x) for x in args.file],
+                "parsed": len(parsed), "duplicates_removed": dups,
+                "imported": len(added)})
+    with open(reg_path, "w", encoding="utf-8") as f:
+        json.dump(reg, f, ensure_ascii=False, indent=2)
+    print("信息源已登记 → %s（第 %d 条）" % (reg_path, len(reg)))
+    if args.hits is None:
+        print("!! 没给 --hits：该库页面显示的命中总数缺失，PRISMA 的 Identification 会缺一个数。"
+              "回去把命中数抄下来补一条登记（同样的 --source/--query 再跑一次 --dry-run 不写台账，"
+              "或直接手工补进 %s）。" % os.path.basename(reg_path))
+    elif args.hits > len(parsed):
+        print("!! 该库命中 %d 条，但只导出/解析了 %d 条——差额要在方法节说明（导出上限？只取前 N 页？）。"
+              % (args.hits, len(parsed)))
+    print("这些记录 **ai_decision 为空**，要和数据库检索的记录走同一套标准筛完；"
+          "**PRISMA 按 found_via 分源报数，不得把 external:* 混进 OpenAlex 的命中数。**")
     return base + added
 
 
@@ -746,6 +927,16 @@ def main():
         s.add_argument("--cap", type=int, default=0,
                        help="只抓前 N 条（试跑用）。加了 cap 的结果不得用来算 PRISMA 数字")
         s.add_argument("--force", action="store_true")
+    im = sub.add_parser("import", help="外部数据库人工检索的导出题录 → 台账（CNKI / WoS / Scopus / 手工清单）")
+    im.add_argument("-b", "--base", required=True, help="筛选台账 csv")
+    im.add_argument("-f", "--file", nargs="+", required=True, help="导出的题录文件，可多个（RIS / EndNote / RefWorks / BibTeX / CSV，自动识别）")
+    im.add_argument("--source", required=True, help="信息源名，如 CNKI / Web of Science / Scopus")
+    im.add_argument("--query", required=True, help="在该库实际用的检索式（原样抄，写进方法节）")
+    im.add_argument("--date", help="检索日期，默认今天")
+    im.add_argument("--hits", type=int, help="该库页面显示的命中总数（PRISMA 的 Identification 要用）")
+    im.add_argument("--reg", help="信息源登记文件，默认台账同目录 外部检索源.json")
+    im.add_argument("--dry-run", action="store_true", help="只解析不写盘")
+
     e = sub.add_parser("epmc")
     e.add_argument("-q", "--query", required=True)
     e.add_argument("-o", "--out", default="epmc")
@@ -778,6 +969,9 @@ def main():
         return
     if args.cmd == "add":
         cmd_add(args)
+        return
+    if args.cmd == "import":
+        cmd_import(args)
         return
     cfg = load_cfg(args.config)
     {"probe": cmd_probe, "recall": cmd_recall, "fetch": cmd_fetch, "cite": cmd_cite}[args.cmd](cfg, args)
