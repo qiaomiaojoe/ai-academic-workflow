@@ -31,7 +31,7 @@ oa_search.py · 系统综述检索执行器（OpenAlex 主引擎 + Europe PMC �
 用法
   python3 oa_search.py probe  -c config.json
   python3 oa_search.py recall -c config.json
-  python3 oa_search.py fetch  -c config.json -o 02_文献/系统综述/records
+  python3 oa_search.py fetch  -c config.json -o RV_综述/02_检索筛选/records
   python3 oa_search.py cite   -c config.json --dois-file included_dois.txt -o .../补漏
   python3 oa_search.py epmc   -q '(AI) AND (MESH:"Education, Nursing")' -o .../epmc
 

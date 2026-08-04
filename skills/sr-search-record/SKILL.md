@@ -11,9 +11,9 @@ description: 综述文章的检索与筛选记录（乔淼PhD · AI学术训练�
 
 ## 调用约定（独立运行）
 
-- **定型（第一件事）**：读 `01_选题/选题.md` 机器锚块的 `review_type`（systematic / semi-systematic / integrative），写进 `检索配置.json` 的 `review_type` 字段——**它决定可筛区间、超限处置与终止规则**，脚本按它切档。锚块缺失就问用户，不要默认 systematic。
-- **输入**：优先读 `01_选题/选题.md`（综述规格、RQ、纳入排除标准、近邻综述）。**有这个文件就直接开跑，不要回头确认概念块**；只有在没有该文件、纳入标准只能从口述推断时，才在拆完概念块后确认一次。
-- **输出**：默认落当前工作目录 `系统综述/` 下；调用方给了路径以调用方为准。
+- **定型（第一件事）**：读 `RV_综述/01_选题/选题.md` 机器锚块的 `review_type`（systematic / semi-systematic / integrative），写进 `检索配置.json` 的 `review_type` 字段——**它决定可筛区间、超限处置与终止规则**，脚本按它切档。锚块缺失就问用户，不要默认 systematic。
+- **输入**：优先读 `RV_综述/01_选题/选题.md`（综述规格、RQ、纳入排除标准、近邻综述）。**有这个文件就直接开跑，不要回头确认概念块**；只有在没有该文件、纳入标准只能从口述推断时，才在拆完概念块后确认一次。
+- **输出**：默认落项目根下的 `RV_综述/02_检索筛选/`；调用方给了路径以调用方为准。**`RV_综述/` 是综述文章在项目里的独立子树**（`01_选题` / `02_检索筛选` / `03_综合成文`），与实证论文那条线的 `01_选题` / `02_文献` / `04_数据` / `05_全文初稿` 彻底隔离——同一个项目里两条线可以并行，谁也不覆盖谁。**不要把综述的产出写进实证论文的目录**（尤其 `04_数据/研究发现.md`：两条线同名不同义，覆盖了从文件名看不出来）。
 - **检索引擎**：本 skill 目录下的 `scripts/oa_search.py`（OpenAlex 开放 API + Europe PMC）。**必须调用这个脚本，不要临时自己写检索代码**——脚本保证每次的检索记录格式一致、命中数可复跑。运行前设 `export OPENALEX_MAILTO=<用户邮箱>` 进礼貌池。
 - **质量标准**：对齐已发表 SLR 的主流做法（2 个以上信息源 + 概念块布尔式 + 限制器 + 题摘/全文两轮筛选 + 纳入文献参考文献回溯）。不追求 Cochrane 级的双人独立筛选与 MeSH 逐行检索——那两条必须由人完成，本 skill 只做到可交接。
 - **调用方覆盖约定**：调用方（工作台 prompt / 用户）显式给出的参数、输入路径、落盘路径与工具选择，一律覆盖本 skill 的默认；但本 skill 的方法步骤、硬约束与停点不可被省略或稀释——调用方若要求跳过某硬约束，以本 skill 为准并提示冲突。
@@ -54,7 +54,7 @@ description: 综述文章的检索与筛选记录（乔淼PhD · AI学术训练�
 - 不要把 outcome、研究设计、过窄情境塞进检索式，除非纳入标准明确要求——那会牺牲召回。
 - 限制器（年份 / 语言 / 文献类型）只在纳入标准有学术理由时才加，理由要写下来。
 
-写成配置文件 `系统综述/检索配置.json`：
+写成配置文件 `RV_综述/02_检索筛选/检索配置.json`：
 
 ```json
 {
@@ -77,8 +77,8 @@ description: 综述文章的检索与筛选记录（乔淼PhD · AI学术训练�
 每轮执行：
 
 ```bash
-python3 <skill>/scripts/oa_search.py probe  -c 系统综述/检索配置.json
-python3 <skill>/scripts/oa_search.py recall -c 系统综述/检索配置.json
+python3 <skill>/scripts/oa_search.py probe  -c RV_综述/02_检索筛选/检索配置.json
+python3 <skill>/scripts/oa_search.py recall -c RV_综述/02_检索筛选/检索配置.json
 ```
 
 看两个指标改式子：
@@ -95,12 +95,12 @@ python3 <skill>/scripts/oa_search.py recall -c 系统综述/检索配置.json
 
 **种子召回不了且诊断为不可修复时**（概念只出现在全文、题摘完全不提），记录该事实并继续，**不要删掉这个种子**，也不要为它无限加词。
 
-每轮都追加记录到 `系统综述/检索记录.md`，保留全部历史版本（这就是"检索式如何迭代"的证据）。
+每轮都追加记录到 `RV_综述/02_检索筛选/检索记录.md`，保留全部历史版本（这就是"检索式如何迭代"的证据）。
 
 ### 第 3 步 · 全量抓取
 
 ```bash
-python3 <skill>/scripts/oa_search.py fetch -c 系统综述/检索配置.json -o 系统综述/records
+python3 <skill>/scripts/oa_search.py fetch -c RV_综述/02_检索筛选/检索配置.json -o RV_综述/02_检索筛选/records
 ```
 
 得到 `records.csv` / `.jsonl`（含 DOI、题名、年份、期刊、作者、被引数、摘要、命中了哪几个块）。记下三个数：**原始命中数、去重后待筛数、摘要覆盖率**。
@@ -108,19 +108,19 @@ python3 <skill>/scripts/oa_search.py fetch -c 系统综述/检索配置.json -o 
 学科对口时补跑一个信息源，让"信息源 ≥2"成立：
 
 - 医学 / 健康 / 护理：Europe PMC（支持 MeSH）
-  `oa_search.py epmc -q '(MESH:"Artificial Intelligence") AND (MESH:"Education, Nursing")' -o 系统综述/epmc`
+  `oa_search.py epmc -q '(MESH:"Artificial Intelligence") AND (MESH:"Education, Nursing")' -o RV_综述/02_检索筛选/epmc`
 - 中文文献：`cnki-advanced-search`（skill 可用时）
 - 灰色文献 / 政策报告：WebSearch，**单列来源，不与数据库检索混算**
 
 ### 第 4 步 · 题摘筛选（连续跑，AI 出建议）
 
-先把纳入 / 排除标准写成**可判定的条目表**（对齐 `选题.md`；每条都要能对一篇摘要回答 yes/no），落 `系统综述/纳入排除标准.md`。
+先把纳入 / 排除标准写成**可判定的条目表**（对齐 `选题.md`；每条都要能对一篇摘要回答 yes/no），落 `RV_综述/02_检索筛选/纳入排除标准.md`。
 
 **4.1 建台账（排序，不排除）**
 
 ```bash
-python3 <skill>/scripts/oa_search.py rank -i 系统综述/records.csv -c 系统综述/检索配置.json \
-  -o 系统综述/筛选决定.csv
+python3 <skill>/scripts/oa_search.py rank -i RV_综述/02_检索筛选/records.csv -c RV_综述/02_检索筛选/检索配置.json \
+  -o RV_综述/02_检索筛选/筛选决定.csv
 ```
 
 按"题名命中概念块数 → 摘要命中块数 → 有无摘要 → 被引数"排序，输出带 `seq` 的空台账。**只排序不排除——PRISMA 要求每条记录都要过筛，一条都不能少。**排序的作用是：万一中途停下，已筛的是最可能相关的那批，而不是按抓取顺序切出的有偏前缀。
@@ -137,7 +137,7 @@ python3 <skill>/scripts/oa_search.py rank -i 系统综述/records.csv -c 系统�
 - 判不准 → `unclear`。宁可多留。
 - 量大时可以先过一遍题名（只排明显的人群/场景不符，绝不用需要读摘要才能判的标准），再对推进的读摘要；两遍**连着跑完，中间不汇报**。用 `pass1` 列记进度（`exclude` / `advance` / `pass2-done` / `locked-noabs`）。
 
-**每处理完一批，写一个分片文件** `系统综述/筛选决定-partNNN.csv`（列只需 `uid, pass1, ai_decision, ai_reason`），**然后立刻继续下一批——不要停下来汇报，不要问"要不要继续"**（硬约束 7）。分片写盘是为了随时可续跑，不是交互点。
+**每处理完一批，写一个分片文件** `RV_综述/02_检索筛选/筛选决定-partNNN.csv`（列只需 `uid, pass1, ai_decision, ai_reason`），**然后立刻继续下一批——不要停下来汇报，不要问"要不要继续"**（硬约束 7）。分片写盘是为了随时可续跑，不是交互点。
 
 **4.2b 抽样（仅 semi-systematic / integrative，systematic 不适用）**
 
@@ -149,7 +149,7 @@ python3 <skill>/scripts/oa_search.py rank -i 系统综述/records.csv -c 系统�
 OpenAlex 对专著与书章的覆盖弱于期刊论文，整合式综述尤其容易漏掉最重要的一批：
 
 ```bash
-python3 <skill>/scripts/oa_search.py add -b 系统综述/筛选决定.csv \
+python3 <skill>/scripts/oa_search.py add -b RV_综述/02_检索筛选/筛选决定.csv \
   --dois 10.xxxx/yyy --csv 手工题录.csv --reason "概念奠基专著"
 ```
 
@@ -158,7 +158,7 @@ python3 <skill>/scripts/oa_search.py add -b 系统综述/筛选决定.csv \
 **4.3 合并 + 报进度**
 
 ```bash
-python3 <skill>/scripts/oa_search.py merge -b 系统综述/筛选决定.csv -p 系统综述/筛选决定-part*.csv
+python3 <skill>/scripts/oa_search.py merge -b RV_综述/02_检索筛选/筛选决定.csv -p RV_综述/02_检索筛选/筛选决定-part*.csv
 ```
 
 `merge` 会把判定写回台账、拒绝 AI 填写人工列、并报出"已筛 X/N + 续跑从 seq=? 起"。
@@ -178,12 +178,12 @@ AI 可写 `pass1 / ai_decision / ai_reason`（本步）与 `pdf_status / ft_deci
 对第 4 步 `include` 的记录做双向追踪（对齐已发表 SLR 的"翻纳入文献参考文献"这一步）：
 
 ```bash
-python3 <skill>/scripts/oa_search.py cite -c 系统综述/检索配置.json \
-  --dois-file 系统综述/included_dois.txt --known-csv 系统综述/records.csv \
-  -o 系统综述/补漏 --min-blocks 2
+python3 <skill>/scripts/oa_search.py cite -c RV_综述/02_检索筛选/检索配置.json \
+  --dois-file RV_综述/02_检索筛选/included_dois.txt --known-csv RV_综述/02_检索筛选/records.csv \
+  -o RV_综述/02_检索筛选/补漏 --min-blocks 2
 ```
 
-补漏集走同样的第 4 步筛选（`rank -i 系统综述/补漏.csv` 建一份自己的台账，或与主台账合并后续筛），`found_via` 保留为 `citation:backward` / `citation:forward`，PRISMA 里单列成"其他方法识别的记录"。**只做一轮**，不递归。
+补漏集走同样的第 4 步筛选（`rank -i RV_综述/02_检索筛选/补漏.csv` 建一份自己的台账，或与主台账合并后续筛），`found_via` 保留为 `citation:backward` / `citation:forward`，PRISMA 里单列成"其他方法识别的记录"。**只做一轮**，不递归。
 
 ### 第 6 步 · 全文获取与全文筛选（PRISMA 的全文评估段）
 
@@ -193,7 +193,7 @@ python3 <skill>/scripts/oa_search.py cite -c 系统综述/检索配置.json \
 
 顺序：① 台账 `oa_url` 直接下载（`rank` 已把 OpenAlex 的 OA 链接带进台账；台账该列为空时从 `records.csv` 按 DOI 取）；② 调 `lit-pdf-zotero` 做批量获取与入库，**override 掉它的 PXYV 部分**——见 6.3；③ 仍拿不到的走 `scansci-pdf`（机构 / 多源）；④ 最后仍无全文的标 `pdf_status = not-retrieved`。
 
-PDF 落 `02_文献/pdf_download/`（命名 `AuthorYear.pdf`）。台账写 `pdf_status` ∈ `oa` / `retrieved` / `request-sent` / `not-retrieved`。
+PDF 落 `RV_综述/02_检索筛选/pdf_download/`（命名 `AuthorYear.pdf`）。台账写 `pdf_status` ∈ `oa` / `retrieved` / `request-sent` / `not-retrieved`。
 **「找不到全文」与「不符合纳入标准」是两件事，分开记**——前者是 PRISMA 里单列的一类，不许混进排除理由。
 
 **6.2 全文筛选**：逐篇按标准表判定，写台账 `ft_decision` ∈ {include, exclude, unclear} + `ft_reason`（排除只记**一个首要理由**）。
@@ -204,26 +204,32 @@ PDF 落 `02_文献/pdf_download/`（命名 `AuthorYear.pdf`）。台账写 `pdf_
 - 分片写 `筛选决定-partFTNNN.csv`（列：`uid, pdf_status, ft_decision, ft_reason`），跑完 `merge`。**同样不逐批汇报**（硬约束 7）。
 - `merge` 会分两段报进度：题摘 X/N，全文 Y/M（M = include + unclear）。
 
-**6.3 入 Zotero**：调 `lit-pdf-zotero`，**明确 override**：
+**6.3 入 Zotero**（**在 6.2 全文筛选之后做**——要先知道谁 include）：调 `lit-pdf-zotero`，**明确 override**：
 
-- **不建金字塔**——`Classic / Key Texts / Supporting-P/X/Y/V` 是 PXYV 那套，系统综述不用。改按 PRISMA 状态建 Collection：`<项目名>/included`、`/excluded-fulltext`、`/awaiting-fulltext`。
-- **不出金字塔分布图，也不出 PXYV 罗盘图**——系统综述不需要这两张，改在第 7 步出 PRISMA 流程图。
-- 标签用 `sr-included` / `sr-excluded` / `sr-awaiting` + 项目 slug；`extra` 写 `study_id`、`ft_reason`、`found_via`。
+- **不建金字塔**——`Classic / Key Texts / Supporting-P/X/Y/V` 是 PXYV 那套，综述文章不用。
+- **只建一个 Collection：`review-<项目名>`**，不下设子集合。
+- **只入 `ft_decision = include` 的文献**——Zotero 里这个集合就等于本综述的最终纳入集，打开就是能写进论文的那批。
+- `ft_decision` 为 exclude / unclear 的、以及 `pdf_status = not-retrieved` 的，**PDF 只落 `RV_综述/02_检索筛选/pdf_download/`，不进 Zotero**；它们在台账里查得到，不会丢。（6.1 取全文时调 `lit-pdf-zotero` 只用它「多渠道找 PDF」的能力，**那一步不入库**。）
+- **不出金字塔分布图，也不出 PXYV 罗盘图**——改在第 7 步出 PRISMA 流程图。
+- 标签用 `sr-included` + 项目 slug；`extra` 写 `study_id`、`found_via`、`doi`。
 - 其余（多渠道找 PDF、逐条入库、入库报告）照 `lit-pdf-zotero` 原样执行。
+- 人之后手工改了 `final_decision`，以台账为准；**不要自作主张改 Zotero 集合成员**。
 
 最终纳入集**只在这一步之后**才成立，交给 `lit-verify` 做一次 DOI / 题录验真，再进入综合（`review-synthesis`）。
 
 ### 第 7 步 · 出表 + 复核清单（产出按型）
 
+**可以分两趟出表**（工作台 ②C → ②D 就是这个用法）：全文阶段之前先出一版——检索记录表、纳入排除标准表、PRISMA 到题摘段照实算，**全文评估 / 全文排除 / 最终纳入三段留空标「待全文阶段回写」**，待复核清单先列题摘层的 include + unclear 交人过目；等第 6 步跑完再回来补齐那三段并**全表重新对账**，待复核清单换成全文层的 `ft_decision`。好处是人先过一眼清单，再决定给哪些文献花时间取全文。
+
 **systematic** 出下面 1–4 全套。**semi-systematic**：1、2 照出，3 改为「选择流程说明」（PRISMA-style 流程图可选；必须写清抽样规则与各阶段数量）并**加一张传统 / 主题覆盖表**（每个研究传统各命中几篇）。**integrative**：1、2 照出，3 改为「语料构成说明」（为什么是这些文献、有目的抽样的标准与理由）并**加一张概念覆盖矩阵**（概念 × 文献，标出空格）。
 
-1. **检索记录表** → `系统综述/检索记录.md`
+1. **检索记录表** → `RV_综述/02_检索筛选/检索记录.md`
    `| # | 概念块 / 步骤 | 内容 | 命中数 |` 的 S1–Sn 表（`probe` 直接给），加上：检索日期、检索源、完整可复跑检索式、限制器及理由、迭代过程（第 2 步每轮）。
-2. **纳入 / 排除标准表** → `系统综述/纳入排除标准.md`
+2. **纳入 / 排除标准表** → `RV_综述/02_检索筛选/纳入排除标准.md`
    `| 维度 | 纳入 | 排除 |`，维度如可得性、样本、学科、研究设计、文献类型、语言、年份。
-3. **PRISMA 流程数字** → `系统综述/PRISMA流量.md`
+3. **PRISMA 流程数字** → `RV_综述/02_检索筛选/PRISMA流量.md`
    识别（各源命中数）→ 去重删除数 → 待筛数 → 题摘排除数 → 全文评估数（= 第 6 步 `ft_decision` 非空数）→ 全文未获取数（`pdf_status=not-retrieved`，单列，不算排除）→ 全文排除数（按 `ft_reason` 分组）→ 最终纳入数。**每个数字标出从哪张表哪一列反算得来**；对不上就停下报错。
-4. **待人工复核清单** → `系统综述/待复核.md`
+4. **待人工复核清单** → `RV_综述/02_检索筛选/待复核.md`
    只列人真正要看的：全文阶段的 `ft_decision = include` 与 `unclear`（各带 AI 理由与 PDF 状态）——题摘层的 include 已经过了全文这一关，不必重列，加一节「需要你确认的三件事」——① 概念块是否漏了本学科行话；② 是否需要去 Scopus / WoS 复核一次纳入集（投保守期刊时）；③ 边界记录的裁决。
 
 **筛选未跑完时**：三张表照出，但每一份产出的**开头必须放醒目警告**——已筛 X/N（百分比）、剩余 Z 条未筛、题摘排除数与纳入数都是部分值、不得据此绘制 PRISMA 流程图或撰写方法节，并写清续跑位置。**不得把部分结果呈现成最终结果。**
@@ -234,5 +240,5 @@ PDF 落 `02_文献/pdf_download/`（命名 `AuthorYear.pdf`）。台账写 `pdf_
 
 - 最终纳入集验真 → `lit-verify`（第 6 步之后跑一次）。PDF 获取与 Zotero 入库的**机械动作**由第 6.3 步调 `lit-pdf-zotero` 完成（带 override，不建金字塔）；全文层的**学术判断**在第 6.2 步，属本 skill。
 - 下游综合 → `review-synthesis`（三型三方法）。**不要走 `data-analysis-round` / `analyze-quantitative-data`**——那是实证论文的单研究数据分析，不含效应量合成。
-- 非系统综述（半系统 / 整合式）的探索性建库 → 走 `literature-search`（PXYV 金字塔），不用本 skill。
+- **综述文章的三型都走本 skill**（内核共用，按 `review_type` 切档）。`literature-search`（PXYV 金字塔）是给**实证论文**定位理论坐标用的，对综述文章是错的产出形状——审稿人问的是"你怎么选的文献"，金字塔答不了。
 - 成文 → `review-draft`（按 PRISMA / RAMESES / Torraco 报告规范）。
