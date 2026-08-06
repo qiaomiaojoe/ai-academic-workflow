@@ -59,7 +59,8 @@ PAUSE = 0.12
 
 # ---------------------------------------------------------------- HTTP
 
-def _get(url, tries=3):
+def _get(url, tries=5):
+    """指数退避。OpenAlex 限流（429）时不要立刻放弃——限流是常态，不是失败。"""
     last = None
     for i in range(tries):
         try:
@@ -69,13 +70,18 @@ def _get(url, tries=3):
         except urllib.error.HTTPError as e:
             last = "HTTP %s %s" % (e.code, e.reason)
             if e.code in (429, 500, 502, 503):
-                time.sleep(2 * (i + 1))
+                wait = min(60, 4 * (2 ** i))
+                sys.stderr.write("[oa_search] %s，%d 秒后重试（第 %d/%d 次）\n" % (last, wait, i + 1, tries))
+                time.sleep(wait)
                 continue
             break
         except Exception as e:  # noqa: BLE001
             last = str(e)
-            time.sleep(1.5 * (i + 1))
-    die("请求失败：%s\n  URL: %s" % (last, url))
+            time.sleep(min(30, 3 * (2 ** i)))
+    die("请求失败：%s\n  URL: %s\n"
+        "  429 持续不退时的降级出路：等 30–60 分钟再跑；或把 filters.publication_year 拆成几段分批抓，\n"
+        "  抓到的部分照常进流程，覆盖缺口写进检索记录的降级记录节——**不要因为限流停下整条流水线**。"
+        % (last, url))
 
 
 def oa(params):
@@ -113,29 +119,42 @@ def load_cfg(path):
     return cfg
 
 
-# 三型档位：检索内核共用，终止规则与规模预期按型切换
+# ---- 全型共用的规模目标（摘要层定稿模式） ----
+# 阶段 1 校准把命中压到 CAL_OK 里；阶段 2 按相关性排序截断到 SHORTLIST 条；
+# 阶段 3 摘要筛选把 include 收敛到 INCLUDE_BAND。三个数一致，流程才闭得上。
+CAL_OK = (300, 2000)      # 检索式校准的目标命中区间
+SHORTLIST = 300           # 进入摘要筛选的候选数（截断线初值）
+SHORTLIST_MAX = 900       # 扩线上限（最多扩 2 次：300 → 600 → 900）
+INCLUDE_BAND = (60, 100)  # 摘要层 include 的目标带
+PRECISION_LIMIT = 1000000  # 单个概念块命中超过它 = 该块混进了泛词，必须收紧
+
+# 三型档位：检索内核与筛选内核完全共用，只有**报告规范与出表形状**按型切换。
+# 摘要层定稿模式下三型都不做全文筛选——这是明示的方法学让步，写进局限，不伪装成完整 PRISMA。
 PROFILES = {
     "systematic": {
-        "label": "系统综述（PRISMA）", "goal": "穷尽识别全部合格研究",
-        "ok": (30, 3000), "warn": 20000,
-        "over": "偏大但可执行：继续，记一条协议偏离。**不得为压数字而收窄纳入标准或删种子**",
-        "far": "过宽，必须收紧最泛的块或加限制器",
-        "stop": "种子召回 100% + 命中落区间 + 本轮无改动",
+        "label": "系统综述（PRISMA）", "goal": "尽可能完整地识别合格研究（摘要层定稿）",
+        "ok": CAL_OK, "warn": 20000,
+        "over": "偏大：交给阶段 2 的相关性排序截断，**不要为压数字收窄纳入标准或删种子**；"
+                "但**含泛词的块必须收紧**（判据：种子召回不下降）",
+        "far": "过宽，必须先收紧最泛的块或加限制器，再谈截断",
+        "stop": "种子召回 100% + 命中落 300–2,000 + 本轮无改动",
+        "note": "PRISMA 要求全文评估。本模式只在题摘层定稿，**产出须写明这一偏离**。",
     },
     "semi-systematic": {
         "label": "半系统 / 叙事综述（RAMESES）", "goal": "覆盖主要研究传统 / 主题，不追求穷尽",
-        "ok": (30, 3000), "warn": 50000,
-        "over": "对半系统综述是正常的——**不要为了压数字收紧检索式**；改为启用分层抽样筛选，"
-                "并把配额规则（按年份 / 学科 / 传统）写进检索记录",
-        "far": "过宽，建议收紧最泛的块，或缩小时间窗并说明理由",
-        "stop": "传统 / 主题饱和（连续若干批无新主题，且各传统都有代表）",
+        "ok": CAL_OK, "warn": 50000,
+        "over": "交给阶段 2 排序截断（比随机抽样召回效率高得多）；同时收紧含泛词的块",
+        "far": "过宽，先收紧最泛的块，或缩小时间窗并说明理由",
+        "stop": "种子召回 100% + 命中落 300–2,000 + 本轮无改动",
+        "note": "RAMESES 不强制全文评估层，本模式与该型不冲突。",
     },
     "integrative": {
-        "label": "整合式综述（Torraco）", "goal": "覆盖构成概念论证所需的文献，有目的抽样合法",
-        "ok": (20, 1000), "warn": 20000,
-        "over": "整合式综述用**有目的抽样**：不必全筛，但必须写明选择标准与理由（否则批判性整合站不住）",
+        "label": "整合式综述（Torraco）", "goal": "覆盖构成概念论证所需的文献",
+        "ok": CAL_OK, "warn": 20000,
+        "over": "交给阶段 2 排序截断，并写明选择标准与理由（否则批判性整合站不住）",
         "far": "过宽，收紧概念块——整合式综述的语料应当是精选的",
-        "stop": "概念覆盖（概念矩阵每格都有文献）+ 选择理由写清",
+        "stop": "种子召回 100% + 命中落 300–2,000 + 本轮无改动",
+        "note": "Torraco 不强制全文评估层，本模式与该型不冲突。",
     },
 }
 
@@ -182,10 +201,14 @@ def cmd_probe(cfg, args):
     bf = [block_filter(field, b) for b in blocks]
     lim = base_filters(cfg)
 
-    rows = []
+    rows, wide = [], []
     for i, b in enumerate(blocks):
+        c = count_of([bf[i]])
         rows.append((b.get("name", "块%d" % (i + 1)),
-                     "单块：" + " OR ".join(b["terms"]), count_of([bf[i]])))
+                     "单块：" + " OR ".join(b["terms"]), c))
+        if c > PRECISION_LIMIT:
+            wide.append((b.get("name", "块%d" % (i + 1)), c,
+                         [t for t in b["terms"] if " " not in clean_term(t)]))
     n = len(blocks)
     for i in range(2, n + 1):
         rows.append(("S1–S%d 组合" % i,
@@ -206,6 +229,19 @@ def cmd_probe(cfg, args):
     pf = PROFILES[cfg["review_type"]]
     lo, hi = pf["ok"]
     print("综述型：%s · 检索目标：%s" % (pf["label"], pf["goal"]))
+
+    # ---- 精度守卫：单块命中过大 = 该块混进了泛词，先修词再谈规模 ----
+    if wide:
+        print("\n!! 精度守卫触发：以下概念块单块命中超过 %s，几乎肯定混进了泛词。"
+              % format(PRECISION_LIMIT, ","))
+        for name, c, singles in wide:
+            print("   · 「%s」命中 %s；块内单词级词条：%s"
+                  % (name, format(c, ","), "、".join(singles) if singles else "（无，检查短语是否过泛）"))
+        print("   处置：删掉这些块里语义不专属的单词（如 verification / accountability / autonomy /")
+        print("   responsibility / subjectivity 这类各学科通用词），改用精确短语。")
+        print("   **合法性判据：改动前后 `recall` 的种子召回率不下降。** 守住这条就是纯赚精度，")
+        print("   不算「为压数字改标准」——这与硬约束 6 不冲突，硬约束 6 禁的是提高纳入门槛。")
+
     if final == 0:
         print("!! 命中 0：概念块过窄或术语拼写有误，必须改式子重跑。")
     elif final < lo:
@@ -215,8 +251,11 @@ def cmd_probe(cfg, args):
     elif final > hi:
         print("命中 %s（超出 %d–%d）：%s" % (format(final, ","), lo, hi, pf["over"]))
     else:
-        print("命中数落在本型的可筛区间（%d–%d）。" % (lo, hi))
-    print("终止规则（本型）：%s" % pf["stop"])
+        print("命中数落在目标区间（%d–%d）。" % (lo, hi))
+    print("终止规则：%s" % pf["stop"])
+    print("下一步规模链：抓全量 → rank --shortlist %d 截断 → 摘要筛选 → include 收敛到 %d–%d"
+          % (SHORTLIST, INCLUDE_BAND[0], INCLUDE_BAND[1]))
+    print("本型报告提示：%s" % pf["note"])
     print("（未加限制器的组合命中：%s）" % format(final_no_lim, ","))
     return rows
 
@@ -468,13 +507,16 @@ def cmd_cite(cfg, args):
 # ---------------------------------------------------------------- rank / merge（筛选台账）
 
 SCREEN_COLS = ["seq", "uid", "doi", "title", "year", "journal", "has_abstract", "n_blocks_hit",
-               "found_via", "oa_url", "pass1", "ai_decision", "ai_reason",
-               "pdf_status", "ft_decision", "ft_reason",
+               "found_via", "oa_url", "rank_score", "pass1", "ai_decision", "ai_reason",
+               "pdf_status", "evidence_level",
                "reviewer_1", "reviewer_2", "final_decision", "note"]
-# AI 可写：题摘筛选 + 全文获取状态 + 全文筛选建议
-DECISION_COLS = ["pass1", "ai_decision", "ai_reason", "pdf_status", "ft_decision", "ft_reason"]
+# AI 可写：摘要筛选 + （③ 成文阶段回填的）全文获取状态与证据级别
+# ft_decision / ft_reason 已退休——摘要层定稿模式只有一层判定，ai_decision 就是纳入决定。
+DECISION_COLS = ["pass1", "ai_decision", "ai_reason", "pdf_status", "evidence_level"]
 # 只能人填
 HUMAN_COLS = ["reviewer_1", "reviewer_2", "final_decision", "note"]
+# 排序截断线以外的记录：**不是排除**，是"未进入筛选"，PRISMA/选择流程说明里单列
+LOWRANK = "not-screened-lowrank"
 
 
 def read_csv(path):
@@ -490,11 +532,58 @@ def write_screen(rows, path):
             w.writerow(r)
 
 
-def cmd_rank(args):
-    """把 records.csv（可多份）排成筛选台账骨架：相关度高的在前。
+_TERM_RE = {}
 
-    **只排序，不排除**——PRISMA 要求每一条记录都要过筛。排序的意义是：
-    中途停下时已筛的是最可能相关的那批，而不是一个按抓取顺序切出来的有偏前缀。
+
+def term_re(t):
+    """词边界匹配，避免 `LLM` 命中 `allmost`、`autonomy` 命中 `autonomous`。"""
+    r = _TERM_RE.get(t)
+    if r is None:
+        r = re.compile(r"(?<![a-z0-9])" + re.escape(t.lower()) + r"(?![a-z0-9])")
+        _TERM_RE[t] = r
+    return r
+
+
+def term_weight(t):
+    """精确短语 3 分，单词 1 分。
+
+    这是压制泛词噪音最直接的杠杆：一条只靠 `responsibility` 命中的记录，
+    和一条命中 `epistemic responsibility` 的记录，相关性不是一个量级。
+    """
+    return 3 if " " in clean_term(t) else 1
+
+
+def relevance(r, blocks):
+    """相关性总分 = Σ_块 (题名最佳词权 × 2 + 摘要最佳词权)。
+
+    题名权重加倍：概念出现在题名里，说明它是这篇文章讲的东西，而不是背景里带一句。
+    """
+    title = (r.get("title") or "").lower()
+    abstract = (r.get("abstract") or "").lower()
+    total = 0
+    for b in blocks:
+        tw = aw = 0
+        for t in b["terms"]:
+            t = clean_term(t)
+            if not t:
+                continue
+            w = term_weight(t)
+            rx = term_re(t)
+            if w > tw and rx.search(title):
+                tw = w
+            if w > aw and rx.search(abstract):
+                aw = w
+        total += tw * 2 + aw
+    return total
+
+
+def cmd_rank(args):
+    """把 records.csv（可多份）排成筛选台账骨架，并按相关性截断出候选集。
+
+    与旧版的区别：旧版"只排序不排除、全部要筛完"，在命中上万时无法执行，
+    实跑退化成了 1% 随机抽样。现在改为**按相关性排序后截断**——
+    截断线以外的标 not-screened-lowrank，**不是排除**，如实写进选择流程说明。
+    同样是"未穷尽"，但截断的召回效率远高于随机抽样。
     """
     if os.path.exists(args.out) and not args.overwrite:
         try:
@@ -520,11 +609,8 @@ def cmd_rank(args):
     print("合并 %d 份输入，共 %d 条（去重删 %d）" % (len(args.inputs), len(rows), len(src) - len(rows)))
 
     blocks = load_cfg(args.config)["blocks"] if args.config else []
-
-    def title_hits(r):
-        """题名里命中了几个概念块——比摘要命中强得多的相关性信号。"""
-        t = (r.get("title") or "").lower()
-        return sum(1 for b in blocks if any(clean_term(x).lower() in t for x in b["terms"]))
+    if not blocks:
+        print("!! 没给 -c 配置，无法按词权排序，退化为按命中块数 / 被引数排序（相关性会差很多）。")
 
     def score(r):
         try:
@@ -536,24 +622,69 @@ def cmd_rank(args):
             cb = int(r.get("cited_by") or 0)
         except ValueError:
             cb = 0
-        return (title_hits(r), nb, ab, cb)
+        return (relevance(r, blocks) if blocks else 0, nb, ab, cb)
 
-    rows.sort(key=score, reverse=True)
+    scored = sorted(((score(r), r) for r in rows), key=lambda x: x[0], reverse=True)
+
+    n = args.shortlist if args.shortlist is not None else SHORTLIST
+    if n <= 0 or n >= len(scored):
+        n = len(scored)
     out = []
-    for i, r in enumerate(rows, 1):
+    for i, (sc, r) in enumerate(scored, 1):
         o = {c: "" for c in SCREEN_COLS}
         o.update({k: r.get(k, "") for k in
                   ("uid", "doi", "title", "year", "journal", "has_abstract", "n_blocks_hit",
                    "found_via", "oa_url")})
         o["seq"] = i
+        o["rank_score"] = sc[0]
+        if i > n:
+            o["pass1"] = LOWRANK  # 未进入筛选，**不是排除**
         out.append(o)
     write_screen(out, args.out)
-    dist = collections.Counter((r["n_blocks_hit"], r["has_abstract"]) for r in out)
-    print("已写出筛选台账骨架 %d 条 → %s（决定列全空，等待筛选）" % (len(out), args.out))
-    print("排序键：题名命中块数 → 摘要命中块数 → 有无摘要 → 被引数（**只排序不排除，全部记录都要筛完**）")
+
+    cut = out[n - 1]["rank_score"] if n else ""
+    print("已写出筛选台账 %d 条 → %s" % (len(out), args.out))
+    print("排序键：Σ_块(题名最佳词权 ×2 + 摘要最佳词权) → 命中块数 → 有无摘要 → 被引数")
+    print("        词权：精确短语 3 分 / 单词 1 分（压制泛词噪音）")
+    if n < len(out):
+        print("\n**截断线 = 前 %d 条**（rank_score ≥ %s）进入摘要筛选；"
+              "其余 %d 条标 %s。" % (n, cut, len(out) - n, LOWRANK))
+        print("  截断不是排除：选择流程说明里单列一行「未进入筛选（低相关性排序）」。")
+        print("  筛完若 include 不足 %d，用 `expand -b %s -n %d` 扩线，只筛新增部分。"
+              % (INCLUDE_BAND[0], args.out, min(n * 2, SHORTLIST_MAX)))
+    else:
+        print("\n全部 %d 条都进入筛选（未触发截断）。" % len(out))
+    dist = collections.Counter((r["n_blocks_hit"], r["has_abstract"]) for r in out[:n])
+    print("候选集构成：")
     for k in sorted(dist, reverse=True)[:8]:
         print("  块数=%s 摘要=%s : %d 条" % (k[0] or "?", k[1] or "?", dist[k]))
     return out
+
+
+def cmd_expand(args):
+    """扩截断线：把 seq ≤ N 里被标为 not-screened-lowrank 的记录放回待筛。
+
+    收敛闭环的一环——筛完 include 不够时扩线，**只筛新增的那批，已判定的一条都不动**。
+    """
+    base = read_csv(args.base)
+    freed = 0
+    for r in base:
+        try:
+            seq = int(r.get("seq") or 0)
+        except ValueError:
+            continue
+        if seq <= args.n and r.get("pass1") == LOWRANK and not r.get("ai_decision"):
+            r["pass1"] = ""
+            freed += 1
+    if not freed:
+        print("没有可释放的记录（seq ≤ %d 的都已在待筛或已判定）。" % args.n)
+        return base
+    write_screen(base, args.base)
+    still = sum(1 for r in base if r.get("pass1") == LOWRANK)
+    print("截断线扩到 %d：释放 %d 条进入待筛；仍在线外 %d 条。" % (args.n, freed, still))
+    print("**只筛这 %d 条新增的，已判定的不要重筛。**扩线动作要写进检索记录（含扩线前的 include 数与理由）。"
+          % freed)
+    return base
 
 
 def cmd_add(args):
@@ -652,39 +783,61 @@ def cmd_merge(args):
     if unknown:
         print("!! %d 条分片记录在台账里找不到对应，已忽略（检查是不是漏了把补漏集一起 rank 进台账）" % unknown)
 
-    done = [r for r in base if r.get("ai_decision")]
-    todo = [r for r in base if not r.get("ai_decision")]
+    # 候选集 = 截断线以内的记录；线外的 not-screened-lowrank 是合法完成态，不算"未筛"
+    pool = [r for r in base if r.get("pass1") != LOWRANK]
+    lowrank = len(base) - len(pool)
+    done = [r for r in pool if r.get("ai_decision")]
+    todo = [r for r in pool if not r.get("ai_decision")]
     dist = collections.Counter(r["ai_decision"] for r in done)
-    print("\n① 题摘筛选：%d / %d（%.1f%%）  合并了 %d 份分片、%d 条判定"
-          % (len(done), len(base), 100.0 * len(done) / max(len(base), 1), len(parts), applied))
+    print("\n摘要筛选：%d / %d（%.1f%%）  合并了 %d 份分片、%d 条判定"
+          % (len(done), len(pool), 100.0 * len(done) / max(len(pool), 1), len(parts), applied))
+    if lowrank:
+        print("  （台账共 %d 条，其中 %d 条在截断线外标 %s——**未进入筛选，不是排除**）"
+              % (len(base), lowrank, LOWRANK))
     for k in ("include", "exclude", "unclear"):
         print("   %-8s %d" % (k, dist.get(k, 0)))
     if todo:
         nxt = todo[0]
         print("   **未筛 %d 条。续跑从 seq=%s 起**（uid=%s）。" % (len(todo), nxt.get("seq"), nxt.get("uid")))
         return base
-    print("   **题摘全部筛完。**")
 
-    # 进入全文阶段的候选 = include + unclear（unclear 一律保留到全文判定）
-    ft_pool = [r for r in base if r.get("ai_decision") in ("include", "unclear")]
-    ft_done = [r for r in ft_pool if r.get("ft_decision")]
-    ft_dist = collections.Counter(r["ft_decision"] for r in ft_done)
-    pdf_dist = collections.Counter(r.get("pdf_status", "") for r in ft_pool if r.get("pdf_status"))
-    print("\n② 全文阶段：候选 %d 条（include %d + unclear %d）"
-          % (len(ft_pool), dist.get("include", 0), dist.get("unclear", 0)))
-    if pdf_dist:
-        print("   全文获取：" + "、".join("%s %d" % (k, v) for k, v in pdf_dist.most_common()))
-    print("   全文筛选：%d / %d" % (len(ft_done), len(ft_pool)))
-    for k in ("include", "exclude", "unclear"):
-        if ft_dist.get(k):
-            print("     %-8s %d" % (k, ft_dist[k]))
-    ft_todo = [r for r in ft_pool if not r.get("ft_decision")]
-    if ft_todo:
-        print("   **待全文判定 %d 条。续跑从 seq=%s 起**（uid=%s）。"
-              % (len(ft_todo), ft_todo[0].get("seq"), ft_todo[0].get("uid")))
+    # ---- 收敛闭环：include 落带才算达标 ----
+    inc = dist.get("include", 0)
+    lo, hi = INCLUDE_BAND
+    print("   **候选集全部筛完。**")
+    print("\n收敛检查：include %d（目标 %d–%d）" % (inc, lo, hi))
+    if inc < lo:
+        nxt_n = min(len(pool) * 2, SHORTLIST_MAX)
+        print("  → 偏少。扩截断线：`expand -b %s -n %d`，**只筛新增部分**，然后重跑 merge。"
+              % (args.base, nxt_n))
+        print("     扩线已达 %d 仍不足时：接受当前数字，如实记账，不再扩。" % SHORTLIST_MAX)
+    elif inc > hi:
+        print("  → 偏多。**不要扩线、也不要改纳入标准**：对 include 集按标准表里最核心的 1–2 条闸门")
+        print("     再过一遍，边缘的降为 unclear（进候选池，**不是 exclude**），然后重跑 merge。")
     else:
-        print("   **全文筛选也已完成。** PRISMA 的全文评估 / 全文排除 / 最终纳入数可以对账出表了。")
-    print("\n注意：ft_decision 仍是 AI 建议；final_decision 由人填（本脚本拒绝 AI 写入）。")
+        print("  → 达标。可以出表 + 入 Zotero 了。")
+    print("  调整最多 2 次；两次后仍越界就接受当前数字并如实汇报，**不要为凑数字反复调**。")
+
+    unc = dist.get("unclear", 0)
+    if unc:
+        print("\nunclear %d 条：全部保留进候选池交人复核（硬约束 3），不得自动排除。" % unc)
+    print("\n摘要层定稿模式：ai_decision 就是纳入决定，没有全文筛选层。")
+    print("  全文在 ③ 成文阶段 best-effort 获取，拿不到不改变纳入集，只影响 evidence_level。")
+    print("  final_decision 仍由人填（本脚本拒绝 AI 写入）。")
+
+    # 合并成功后归档分片，避免目录被空壳文件淹掉
+    if not args.no_archive and parts:
+        d = os.path.join(os.path.dirname(os.path.abspath(args.base)) or ".", "_parts")
+        os.makedirs(d, exist_ok=True)
+        moved = 0
+        for p in parts:
+            try:
+                os.replace(p, os.path.join(d, os.path.basename(p)))
+                moved += 1
+            except OSError:
+                pass
+        if moved:
+            print("\n已把 %d 份分片归档到 %s/（判定都在台账里了，分片只是续跑凭证）。" % (moved, d))
     return base
 
 
@@ -750,14 +903,21 @@ def main():
     e.add_argument("-q", "--query", required=True)
     e.add_argument("-o", "--out", default="epmc")
     e.add_argument("--force", action="store_true")
-    rk = sub.add_parser("rank", help="records.csv → 排好序的筛选台账骨架（只排序不排除）")
+    rk = sub.add_parser("rank", help="records.csv → 按相关性排序的筛选台账 + 截断出候选集")
     rk.add_argument("-i", "--inputs", nargs="+", required=True)
     rk.add_argument("-o", "--out", default="筛选决定.csv")
-    rk.add_argument("-c", "--config", help="给了就按题名命中概念块数优先排序（强烈建议给）")
+    rk.add_argument("-c", "--config", help="给了才能按词权排序（**强烈建议给**，不给相关性会差很多）")
+    rk.add_argument("--shortlist", type=int, default=None,
+                    help="截断线：前 N 条进入摘要筛选，其余标 not-screened-lowrank（默认 %d，0=不截断）"
+                         % SHORTLIST)
     rk.add_argument("--overwrite", action="store_true", help="覆盖已有判定的台账（危险，先备份）")
-    mg = sub.add_parser("merge", help="合并分片筛选结果 + 报进度与续跑位置")
+    ex = sub.add_parser("expand", help="扩截断线：把 seq ≤ N 的 lowrank 记录放回待筛（include 不足时用）")
+    ex.add_argument("-b", "--base", required=True)
+    ex.add_argument("-n", type=int, required=True, help="新的截断线，如 600")
+    mg = sub.add_parser("merge", help="合并分片筛选结果 + 收敛检查 + 报续跑位置")
     mg.add_argument("-b", "--base", required=True)
     mg.add_argument("-p", "--parts", nargs="+", required=True)
+    mg.add_argument("--no-archive", action="store_true", help="合并后不把分片移进 _parts/")
     ad = sub.add_parser("add", help="手工补充文献进台账（书 / 书章 / 库外经典），found_via=manual")
     ad.add_argument("-b", "--base", required=True)
     ad.add_argument("--dois", nargs="*", help="有 DOI 的走 OpenAlex 取题录")
@@ -772,6 +932,9 @@ def main():
         return
     if args.cmd == "rank":
         cmd_rank(args)
+        return
+    if args.cmd == "expand":
+        cmd_expand(args)
         return
     if args.cmd == "merge":
         cmd_merge(args)
