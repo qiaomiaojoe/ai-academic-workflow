@@ -14,6 +14,7 @@ description: 单篇论文批判性阅读（乔淼PhD · AI学术训练营 · AI�
 - 输入（按下方 Input Protocol 顺序处理）：PDF 路径 / Zotero item 或 citation key / DOI / URL / 纯文本片段。信息不足时用 `AskUserQuestion` 问，不编造。
 - 落盘：项目内 → `02_文献/深读/深读-{AuthorYear}.md`（此路径下的深读产物会被 `review-draft-assembly` 组装综述初稿时自动并入 Section 2）；项目外 → 当前目录 `./深读/深读-{AuthorYear}.md`；用户只要会话内结果就不落盘。
 - 产出语言：项目 CLAUDE.md 有设定则从之，否则跟随用户。
+- **调用方覆盖约定**：调用方（工作台 / 工作站 prompt / 用户）显式给出的参数、输入路径、落盘路径与工具选择，一律覆盖本 skill 的默认；但本 skill 的方法步骤、硬约束与停点不可被省略或稀释——调用方若要求跳过某硬约束，以本 skill 为准并提示冲突。
 
 ## 何时使用 / When to invoke
 
