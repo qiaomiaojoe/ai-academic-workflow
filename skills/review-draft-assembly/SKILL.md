@@ -74,4 +74,4 @@ description: 综述初稿组装（乔淼PhD · AI学术训练营 · AI学术工�
 
 ## 【另存 Word】
 
-md 初稿完成后，再转一份 .docx（用 pandoc 或 docx 能力，保留参考文献表与引用格式），与 md 同目录。中英双语项目：两份 md → 各转一份 docx。
+md 初稿完成后，再转一份 .docx，与 md 同目录（中英双语项目：两份 md → 各转一份 docx）。**只用 pandoc 命令行转**（`pandoc 综述初稿.md -o 综述初稿.docx`，保留参考文献表与引用格式）；**不要调用任何文档 / Word 类技能或 Word 文档会话**。本机没有 pandoc（`command -v pandoc` 为空）就跳过 docx，md 照常交付，在结尾说一句「没装 pandoc，docx 没转；装好后让我补转」——这不算失败，不要停下来等。
