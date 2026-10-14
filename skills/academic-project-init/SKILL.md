@@ -33,7 +33,7 @@ description: AI 学术研究项目初始化（乔淼PhD · AI学术训练营 · 
 
 | 放什么 | 放哪 |
 |---|---|
-| 选题（选题.md、断点续跑的中间稿） | 选题/ |
+| 选题（选题.md） | 选题/ |
 | 文献清单、检索候选、验真报告、金字塔分层、入库报告、文献可视化 | 文献/ |
 | 文献 PDF（命名 AuthorYear.pdf） | 文献/PDF/ |
 | 知识模块清单、综述蓝图、Gap、综述初稿（含 .docx）、引用核验报告、单篇深读（深读-AuthorYear.md） | 文献/ |
@@ -56,7 +56,7 @@ description: AI 学术研究项目初始化（乔淼PhD · AI学术训练营 · 
 
 | 阶段 | skill | 读 | 写 |
 |---|---|---|---|
-| 选题 | topic-*（四种研究性文章模式）/ topic-pxyv-parse | — | 选题/选题.md（顶部 workbench 锚块）+ 断点续跑中间稿 |
+| 选题 | topic-*（四种研究性文章模式）/ topic-pxyv-parse | — | 选题/选题.md（顶部 workbench 锚块） |
 | 文献搜索 | literature-search（pxyv-search → lit-verify → lit-pyramid → lit-pdf-zotero） | 选题/选题.md | 文献/文献清单.md、文献/PDF/、Zotero 集合 |
 | 文献分析 | literature-analysis（knowledge-module-list → review-blueprint → research-gap-scan → knowledge-module-gen →（可选 critical-paper-reading）→ review-draft-assembly） | 选题/、文献/ | 文献/知识模块清单.md、综述蓝图.md/.html、知识模块/M*.md、深读-*.md、综述初稿.md、引用核验报告.md |
 | 研究设计 | research-design（methods-map → methodology-draft） | 选题/、文献/ | 方法/方法地图.md/.html、研究设计初稿.md、研究设计-设计说明.md |
