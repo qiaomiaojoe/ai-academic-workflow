@@ -1,16 +1,16 @@
 ---
 name: lit-pdf-zotero
-description: 文献 PDF 获取 + Zotero 入库 + 可视化（乔淼PhD · AI学术训练营 · AI学术工作流）。对一份文献清单批量：确认 DOI/CNKI ID → 补全引用数 → 多渠道找 PDF 落盘（OA/preprint/sd-download/wos-download/cnki-download）→ 按金字塔结构建 Zotero Collection 逐条入库（含标签与 extra 元数据）→ 生成金字塔分布图 + PXYV 罗盘投影双图 HTML。Trigger on："把这批文献下载 PDF 入库 Zotero"、"文献入库+可视化"、"batch download PDFs and import to Zotero"、"入 Zotero 并画文献金字塔"。
+description: 文献 PDF 获取 + Zotero 入库 + 可视化（乔淼PhD · AI学术训练营 · AI学术工作流）。对一份文献清单批量：确认 DOI/CNKI ID → 补全引用数 → 多渠道找 PDF 落盘（OA/preprint/sd-download/wos-download/cnki-download）→ 入一个 Zotero Collection（层级和 PXYV 节点记在标签里，不建子集合；含 extra 元数据）→ 生成金字塔分布图 + PXYV 罗盘投影双图 HTML。Trigger on："把这批文献下载 PDF 入库 Zotero"、"文献入库+可视化"、"batch download PDFs and import to Zotero"、"入 Zotero 并画文献金字塔"。
 ---
 
 # Lit PDF + Zotero · 获取 PDF → 入库 → 可视化
 
-对一份文献清单（最好是 `lit-pyramid` 的分层清单；无分层也能跑，只是入库不分子集合、图 1 跳过）执行四步。
+对一份文献清单（最好是 `lit-pyramid` 的分层清单；无分层也能跑，只是没有层级标签、图 1 跳过）执行四步。
 
 ## 调用约定（独立运行）
 
 - 输入：文献清单（分层表 / 普通表 / DOI 列表均可）+ Zotero Collection 名（默认 = 项目名或用户给的短名）。
-- 落盘（默认当前工作目录）：PDF 存 `pdf_download/`，命名 AuthorYear.pdf；最终清单写 `文献清单.md`；可视化写 `[slug]-visualization.html`。
+- 落盘（默认当前工作目录）：PDF 存PDF 文件夹（在项目里按 AGENTS.md 的「文件放哪」表：工作站项目是 文献/PDF/，旧项目 02_文献/pdf_download/；独立运行默认 pdf_download/，或用户给的文件夹），命名 AuthorYear.pdf；最终清单写 `文献清单.md`；可视化写 `[slug]-visualization.html`。
 - 工具适配：Zotero MCP 不可用 → 只做 PDF + 清单落盘，并告知手动导入方式；下载工具按环境可用性挑。
 - **调用方覆盖约定**：调用方（工作台 prompt / 用户）显式给出的参数、输入路径、落盘路径与工具选择，一律覆盖本 skill 的默认；但本 skill 的方法步骤、硬约束与停点不可被省略或稀释——调用方若要求跳过某硬约束，以本 skill 为准并提示冲突。
 
@@ -33,9 +33,9 @@ description: 文献 PDF 获取 + Zotero 入库 + 可视化（乔淼PhD · AI学�
 
 ## Step 4 · 入库 Zotero + 可视化
 
-Collection 结构：顶层 = Collection 名，下设 Classic / Key Texts / Supporting-P / Supporting-X / Supporting-Y / Supporting-V（无分层信息则只建顶层）。
+Collection 结构：只建一个 Collection（名字 = Collection 名），**不建子集合**（不按金字塔层、不按 PXYV 节点分）。层级和节点一律记在标签里，用户在 Zotero 里按标签筛就能分开看。Collection 已存在就直接往里加。
 
-逐条入库：有 DOI → `zotero_add_by_doi(doi, collections=[对应子集], tags=[金字塔层, PXYV节点, 项目slug], attach_mode="auto")`；只有 URL/CNKI → `zotero_add_by_url`（或用 `gs-export` / `sd-export` / `wos-export` / `cnki-export` 直接推送）。入库后用 `zotero_update_item` 写 `extra` 字段：
+逐条入库：有 DOI → `zotero_add_by_doi(doi, collections=[Collection], tags=[金字塔层, PXYV节点, 项目slug], attach_mode="auto")`；只有 URL/CNKI → `zotero_add_by_url`（或用 `gs-export` / `sd-export` / `wos-export` / `cnki-export` 直接推送）。入库后用 `zotero_update_item` 写 `extra` 字段：
 
 ```
 citations: 123
@@ -43,9 +43,9 @@ core_argument: 一句话核心论点
 pxyv_weights: P=0.7, V=0.3
 ```
 
-（pxyv_weights 按"主导维度"生成，单一维度 = 1.0。标签：金字塔层 "classic"/"key"/"supporting"；节点 "P"/"X"/"Y"/"V" 可多选；项目 slug。）
+（pxyv_weights 按"主导维度"生成，单一维度 = 1.0。标签：金字塔层 `tier:classic` / `tier:key` / `tier:supporting`；节点 `pxyv:P` / `pxyv:X` / `pxyv:Y` / `pxyv:V` 可多选；项目 slug。）
 
-入库报告：`| # | 标题 | 入库状态 | PDF 附件 | Collection | 标签 |` + 统计（总入库 / PDF 已附 / 金字塔分布 / 节点覆盖）。
+入库报告：`| # | 标题 | 入库状态 | PDF 附件 | 标签 |` + 统计（总入库 / PDF 已附 / 金字塔分布 / 节点覆盖）。
 
 可视化（单文件 HTML，纯 HTML+CSS+内联 SVG 无外部库；浅色背景 #FAF7F2，amber #B8834A）：
 - **图 1 文献金字塔分布图**：三层水平堆叠，顶 Classic（窄，标篇名+作者）→ 中 Key（标标题+主要节点）→ 底 Supporting（按数量宽度）；Classic #E65100 / Key #1565C0 / Supporting #558B2F。

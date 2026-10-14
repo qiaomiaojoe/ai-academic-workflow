@@ -12,8 +12,8 @@ description: 文献分析/综述完整任务入口（乔淼PhD · AI学术训练
 | 1a 模块清单 | `knowledge-module-list` | 知识模块清单.md |
 | 1b 综述蓝图 | `review-blueprint` | 综述蓝图.md + .html |
 | 1c Gap 识别 | `research-gap-scan` | 蓝图 Section 3（gap + 定位） |
-| 2 模块生成 | `knowledge-module-gen` | 模块/M1-Mn.md + 执行日志.md |
-| （可选）单篇深读 | `critical-paper-reading` | 深读/深读-AuthorYear.md（组装时自动并入 Section 2） |
+| 2 模块生成 | `knowledge-module-gen` | 知识模块/M1-Mn.md + 执行日志.md |
+| （可选）单篇深读 | `critical-paper-reading` | 深读-AuthorYear.md（组装时自动并入 Section 2） |
 | 3 初稿组装 | `review-draft-assembly` | 综述初稿.md + .docx + 引用核验报告.md |
 
 ## 编排规则
