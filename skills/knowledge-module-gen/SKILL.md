@@ -1,20 +1,20 @@
 ---
 name: knowledge-module-gen
-description: 知识模块生成（乔淼PhD · AI学术训练营 · AI学术工作流 · 文献分析步骤）。按知识模块清单逐模块读全文生成 M_n.md：机械抽取模块 prompt（不改写不补全）、flag 而非 ask、map-reduce 逐篇防爆上下文、页码诚实、每模块一行执行日志自检；全文只读本地 PDF。Trigger on："生成知识模块"、"按模块清单跑模块"、"逐模块读全文写 M1-Mn"、"generate knowledge modules from my module list"。
+description: 知识模块生成（乔淼PhD · AI学术训练营 · AI学术工作流 · 文献分析步骤）。按知识模块清单逐模块读全文生成 M_n.md：机械抽取模块 prompt（不改写不补全）、flag 而非 ask、map-reduce 逐篇防爆上下文、页码诚实、每模块一行执行日志自检；全文默认读本地 PDF，也可走 Zotero。Trigger on："生成知识模块"、"按模块清单跑模块"、"逐模块读全文写 M1-Mn"、"generate knowledge modules from my module list"。
 ---
 
 # Knowledge Module Gen · 知识模块生成
 
 ## 调用约定（独立运行）
 
-- 输入：知识模块清单（`知识模块清单.md`，或用户给的路径；没有 → 先跑 `knowledge-module-list`）+ 本地 PDF 文件夹（默认 pdf_download/，或用户给的文件夹）。
+- 输入：知识模块清单（`知识模块清单.md`，或用户给的路径；没有 → 先跑 `knowledge-module-list`）+ 主数据通道（本地 PDF / Zotero MCP；**默认本地 PDF**，调用方或用户指定 Zotero 才走 Zotero）。
 - 落盘：`模块/M_n.md` + `执行日志.md`（默认当前工作目录）。
 - **调用方覆盖约定**：调用方（工作台 prompt / 用户）显式给出的参数、输入路径、落盘路径与工具选择，一律覆盖本 skill 的默认；但本 skill 的方法步骤、硬约束与停点不可被省略或稀释——调用方若要求跳过某硬约束，以本 skill 为准并提示冲突。
 - 工具适配：以环境实际可用为准，不可用时走降级通道并注明，不编造工具结果。
 
 前置：已有 知识模块清单.md（步骤 1 Part A 产物）。若没有，先跑步骤 1。
 
-全文一律读本地 PDF（不走 Zotero 全文接口：后台运行时取回的全文常缺页码或对不上条目）。
+按主数据通道执行，默认本地 PDF。
 
 ## 【准确拾取并执行模块 prompt】（防 AI 自由发挥 · 全程不打断）
 
@@ -24,9 +24,10 @@ description: 知识模块生成（乔淼PhD · AI学术训练营 · AI学术工�
 2. **flag 而非 ask**（执行忠实，想改只标记，不停下来问）：照原样跑。若认为某处该调整，不要调整——在该模块输出里加一行 `_deviation: 想改什么 + 为什么`，然后仍按原 prompt 执行。
 3. **结尾自检日志**（把关靠一份日志，不靠过程确认）：每跑完一个模块，往 执行日志.md 追加一行：`M_n | 用的 prompt 首行 | 结构符合期望(✓/✗) | 证据假设对上(✓/✗) | 有无 _deviation`。全部跑完后用户只看这一份日志，有 ✗ 或 _deviation 的模块才回看。
 
-## 数据通道：本地 PDF
+## 主数据通道分支
 
-在 pdf_download/（或用户给的文件夹）下按 AuthorYear.pdf 找到本地 PDF，按页读取，按下方 map-reduce 逐篇抽取（本地 PDF 天然有页码，引用页码以此为准）。找不到对应 PDF 的文献：不去别处找全文，在该模块输出和 执行日志.md 里标 `缺 PDF：AuthorYear`，该篇只按清单里的题录写一句定位，不编造内容；全部跑完后把缺 PDF 的文献汇总列给用户。
+- **本地 PDF（默认）**：在 pdf_download/（或用户给的文件夹）下按 AuthorYear.pdf 找到本地 PDF，按页读取，按下方 map-reduce 逐篇抽取（本地 PDF 天然有页码，引用页码以此为准）。找不到对应 PDF 的文献：在该模块输出和 执行日志.md 里标 `缺 PDF：AuthorYear`，Zotero 可用时可改从 Zotero 取这一篇的全文，否则只按清单里的题录写一句定位，不编造内容；全部跑完后把缺 PDF 的文献汇总列给用户。
+- **Zotero MCP**：对该模块每篇文献调 zotero_get_item_fulltext 取全文（或 zotero_get_item_metadata 取摘要；工具名以环境实际注册为准），按下方 map-reduce 逐篇抽取，不要一次性拼接全部全文。取回为空、缺页码或对不上条目时，回退本地 PDF，并在执行日志里注明。
 
 ## 【上下文管理 · map-reduce 逐篇】
 
@@ -39,7 +40,7 @@ description: 知识模块生成（乔淼PhD · AI学术训练营 · AI学术工�
 ## 【页码诚实】
 
 - 优先用能给页码的来源（本地 PDF 按页读，页码最准）。
-- PDF 没有文字层或页码读不出 → 标注 (Author Year)，不要编造页码。
+- Zotero 全文不含页码或 PDF 没有文字层 → 回退另一个通道；都拿不到就标注 (Author Year)，不要编造页码。
 
 ## 【字数与结构】
 
@@ -49,7 +50,7 @@ description: 知识模块生成（乔淼PhD · AI学术训练营 · AI学术工�
 
 ## 【双层产物】
 
-- M_n.md 是工作层，可以"脏"：正文之外附"证据摘录"区（原文 quote + 页码 + 文件名），供步骤 3 溯源。
+- M_n.md 是工作层，可以"脏"：正文之外附"证据摘录"区（原文 quote + 页码 + 文件名或 Zotero key），供步骤 3 溯源。
 - 步骤 3 的综述初稿才要纯净——溯源信息不进初稿。
 
 ## 输出
