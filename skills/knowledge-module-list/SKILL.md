@@ -10,7 +10,7 @@ description: 知识模块清单（乔淼PhD · AI学术训练营 · AI学术工�
 ## 调用约定（独立运行）
 
 - 选题 context：用户给的 RQ / PXYV 一句话 > `选题.md`（选题产出）> 请用户用 1-3 句说清（研究问题 + 理论视角 + 现象语境）。
-- 文献数据源（三选一）：Zotero 集合（`zotero_get_collection_items` 拉元数据、`zotero_get_item_metadata` 拉单篇摘要；本步不调 NotebookLM）/ 本地 PDF 文件夹 / 文献清单 md。Zotero 不可用 → 以清单为元数据来源、按需读本地 PDF，产出顶部注明"数据源已降级"。
+- 文献数据源（三选一）：Zotero 集合（`zotero_get_collection_items` 拉元数据、`zotero_get_item_metadata` 拉单篇摘要）/ 本地 PDF 文件夹 / 文献清单 md。Zotero 不可用 → 以清单为元数据来源、按需读本地 PDF，产出顶部注明"数据源已降级"。
 - 落盘：`知识模块清单.md`（默认当前工作目录）。
 - **调用方覆盖约定**：调用方（工作台 prompt / 用户）显式给出的参数、输入路径、落盘路径与工具选择，一律覆盖本 skill 的默认；但本 skill 的方法步骤、硬约束与停点不可被省略或稀释——调用方若要求跳过某硬约束，以本 skill 为准并提示冲突。
 

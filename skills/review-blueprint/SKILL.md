@@ -1,6 +1,6 @@
 ---
 name: review-blueprint
-description: 综述蓝图（乔淼PhD · AI学术训练营 · AI学术工作流 · 文献分析步骤）。把知识模块清单编排成综述的逻辑结构：每个 Section 的标题 + 核心 argument + 模块出场序列 + 模块间逻辑（前置依赖/并列对照/对话张力）+ 段落写作提示，并渲染成自包含 HTML 可视化自动打开。Section 3 的 gap 内容由 research-gap-scan 填入。Trigger on："帮我编综述蓝图"、"把知识模块编排成综述结构"、"review blueprint"、"organize my modules into a review outline"。
+description: 综述蓝图（乔淼PhD · AI学术训练营 · AI学术工作流 · 文献分析步骤）。把知识模块清单编排成综述的逻辑结构：每个 Section 的标题 + 核心 argument + 模块出场序列 + 模块间逻辑（前置依赖/并列对照/对话张力）+ 段落写作提示，并渲染成自包含 HTML 可视化。Section 3 的 gap 内容由 research-gap-scan 填入。Trigger on："帮我编综述蓝图"、"把知识模块编排成综述结构"、"review blueprint"、"organize my modules into a review outline"。
 ---
 
 # Review Blueprint · 综述蓝图
@@ -32,7 +32,7 @@ description: 综述蓝图（乔淼PhD · AI学术训练营 · AI学术工作流 
 （调用 research-gap-scan 产出后填入；用户不需要 gap 时此节标注"待 gap 扫描"）
 ```
 
-## 可视化（综述蓝图.html · 自动打开）
+## 可视化（综述蓝图.html）
 
 自包含 HTML（所有 CSS 内联，无外部依赖），用于教学/讨论：
 - 顶部 header：选题标题 + Section 数 / 模块数 / gap 数
@@ -40,7 +40,7 @@ description: 综述蓝图（乔淼PhD · AI学术训练营 · AI学术工作流 
 - Section 3 单独展示 gap 列表（标注类型）
 - 配色：背景 #fafaf7 / 纸面 #fff / 文字 #1a1a1a / 辅助 #6b6b6b / 边线 #e0ddd6；PingFang SC 系；行高 1.7；max-width 1100px
 
-渲染完自动打开（路径含空格带引号）：macOS `open "…"` / Windows `start "" "…"` / Linux `xdg-open "…"`。
+只写文件，不要用命令打开浏览器（用户在工作站或访达里自己点开）。
 
 ## 下一步建议
 

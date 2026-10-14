@@ -51,7 +51,7 @@ B.1 P 校准 · "我的 P 是该学科主流吗？"
 - 用户动作：搜 [你的 P] + [你的学科] 近 5 年 → 主流 / 部分主流 / 非主流 + 代表文献 2-3 篇
 
 B.2 X 校准 · "我的 X 在学界用什么标准术语？"
-- 工具：NotebookLM（导入 3-5 篇综述）或 Web Search
+- 工具：Web Search，或直接读 3-5 篇综述的 PDF
 - 范例：ClassDojo 学界叫 "behavior management apps" / "classroom surveillance technologies" / "edtech for behavior tracking"
 - 用户动作：问 "How is [我的 X] categorized in literature?" → 同义术语清单
 
