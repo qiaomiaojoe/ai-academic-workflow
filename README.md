@@ -1,15 +1,22 @@
 # AI学术工作流 · 「AI学术训练营」skills 库（乔淼PhD）
 
-> 「**AI学术训练营**」（乔淼PhD）配套的 **AI学术工作流** skills 库：把训练营讲授的完整学术工作流——**选题 → 文献搜索 → 文献分析 → 研究设计 → 数据分析 → 全文初稿**——拆到步骤颗粒度，共 **34 个 skills**。装进 Claude Code / Codex，按任务单独调用，或自由排列组合。
+> 「**AI学术训练营**」（乔淼PhD）配套的 **AI学术工作流** skills 库，按 **期刊初稿**、**综述文章** 两条工作流组织，共 **37 个 skills**。先选要完成的工作流，再按阶段调用 skill；也可以独立运行某一步。支持 Claude Code / Codex。
 >
 > **谁在用**：AI学术训练营学员
 ---
 
 ## 这是什么
 
-「AI学术训练营」教的是一套完整的 **AI学术工作流**，方法论锚点与课程一致：
+本仓库目前收录两条工作流，分别面向研究性论文初稿与独立的综述文章：
 
-| 讲次 | 工作流 | 方法论锚 |
+| 工作流 | 阶段 | 目标产出 |
+|--------|------|----------|
+| **期刊初稿** | 选题 → 文献搜索 → 文献分析 → 研究设计 → 数据分析 → 全文初稿 | 一篇研究性论文的全文初稿 |
+| **综述文章** | 综述选题 → 检索与筛选 → 证据综合 → 综述文章初稿 | 一篇系统 / 半系统·叙事 / 整合式综述文章 |
+
+工作流内的方法论锚点与训练营课程一致：
+
+| 讲次 | 阶段 / 内容 | 方法论锚 |
 |------|--------|---------|
 | L1-2 | AI工作台 / 选题 | PXYV 公式 + 7 种选题模式（研究性 4 + 综述性 3 · Snyder 三型）+ 贡献阶梯 + 近邻对位 |
 | L3 | 文献搜索 / 文献分析 | 文献金字塔 + 验真机制 + 综述蓝图 / 知识模块 |
@@ -18,8 +25,8 @@
 
 训练营学员手里有两件配套工具，**分工不交叉**：
 
-- **AI学术工作台**（单文件 HTML，随课发放）——为六大工作流之间的**流畅交接**而优化：填表出 prompt、产出按命名表落盘、下一步自动读上一步。适合从头到尾跑通一篇论文。
-- **本仓库的 skills 库**——把同一套工作流拆到**步骤颗粒度**：每个 self-contained 的功能和步骤都是一个独立 skill，单个 skill 就能运行。适合脱离整篇论文的特定任务（单独搜一批文献、单独验真一份参考文献、单独找 research gap、单独拆一篇范文……），也适合按自己的需要排列组合。
+- **AI学术工作台**（单文件 HTML，随课发放）——为每条工作流中各阶段的**流畅交接**而优化：填表出 prompt、产出按命名表落盘、下一步自动读上一步。适合从头到尾跑通一篇论文。
+- **本仓库的 skills 库**——把各条工作流拆到**步骤颗粒度**：每个 self-contained 的功能和步骤都是一个独立 skill，单个 skill 就能运行。适合脱离整篇论文的特定任务（单独搜一批文献、单独验真一份参考文献、单独找 research gap、单独拆一篇范文……），也适合按自己的需要排列组合。
 
 每个 skill 都是同一个三层拼装：
 
@@ -31,17 +38,43 @@
 
 ---
 
-## Skills 树（34 个）
+## Skills 树（按工作流分类 · 37 个）
 
-按工作流组织。**任务级** skill 是完整任务的入口（内部按序编排步骤级 skills，阶段间停下确认）；**步骤级** skill 单独调用、自由组合。
+以下是使用导航，按 **工作流 → 阶段 → skill** 展开；仓库中的安装目录仍为 `skills/<name>/`。同一个 skill 可被多条工作流复用，数量按唯一 skill 目录统计，不重复计数。
 
-### 0 · 项目初始化（可选）
+```text
+AI学术工作流
+├── 期刊初稿
+│   ├── 项目初始化（可选）
+│   ├── 01 选题
+│   ├── 02 文献搜索
+│   ├── 03 文献分析（产出论文的文献综述节）
+│   ├── 04 研究设计
+│   ├── 05 数据分析
+│   ├── 06 全文初稿
+│   └── 配套：数据 Skill 工坊
+└── 综述文章
+    ├── 01 综述选题（系统 / 半系统·叙事 / 整合式）
+    ├── 02 检索与筛选
+    ├── 03 证据综合
+    └── 04 综述文章初稿
+```
+
+**任务级** skill 编排一个阶段的完整任务；**步骤级** skill 执行具体步骤；**方法级** skill 提供分析方法。各 skill 按自身约定保留人工判断与确认节点。
+
+### 工作流一 · 期刊初稿
+
+从研究问题出发，经过文献、研究设计与数据分析，形成可继续打磨的研究性论文初稿。理论研究等任务按具体研究需要选择阶段。
+
+这里的“文献分析”服务于论文中的文献综述节，使用 `literature-analysis` / `review-draft-assembly`；整篇综述文章的流程见下方“工作流二”。
+
+#### 0 · 项目初始化（可选）
 
 | Skill | 用途 |
 |-------|------|
 | [`academic-project-init`](skills/academic-project-init/SKILL.md) | 建标准项目结构 + CLAUDE.md 命名表。建了项目结构，各 skills 的产出会自动落盘衔接；不建也不影响任何 skill 单独运行 |
 
-### 01 · 选题
+#### 01 · 选题
 
 | 层级 | Skill | 用途 |
 |------|-------|------|
@@ -50,12 +83,9 @@
 | 步骤级 | [`topic-hypothesis-testing`](skills/topic-hypothesis-testing/SKILL.md) | 模式② 假设检验：三阶段选题教练（输出 H 假设链 + 操作化） |
 | 步骤级 | [`topic-concept-construction`](skills/topic-concept-construction/SKILL.md) | 模式③ 概念建构：三阶段选题教练（输出原创概念 + 诠释路径） |
 | 步骤级 | [`topic-method-driven`](skills/topic-method-driven/SKILL.md) | 模式④ 方法驱动：三阶段选题教练（输出 Aims + 双 V 方法计划） |
-| 步骤级 | [`topic-review-systematic`](skills/topic-review-systematic/SKILL.md) | 综述① 系统综述：三阶段选题教练（窄问题 + 纳入排除 + 检索协议 · PRISMA） |
-| 步骤级 | [`topic-review-semisystematic`](skills/topic-review-semisystematic/SKILL.md) | 综述② 半系统/叙事：三阶段选题教练（组织框架 + 研究议程 · RAMESES） |
-| 步骤级 | [`topic-review-integrative`](skills/topic-review-integrative/SKILL.md) | 综述③ 整合式：三阶段选题教练（批判性整合 → 新框架/类型学 · Torraco） |
 | 步骤级 | [`topic-pxyv-parse`](skills/topic-pxyv-parse/SKILL.md) | 已有选题的 PXYV 四维拆分 + 缺口诊断（不重跑三阶段） |
 
-### 02 · 文献搜索
+#### 02 · 文献搜索
 
 | 层级 | Skill | 用途 |
 |------|-------|------|
@@ -65,19 +95,19 @@
 | 步骤级 | [`lit-pyramid`](skills/lit-pyramid/SKILL.md) | 金字塔分层：Classic / Key / Supporting 硬指标 + 对话关系 + 覆盖配额 |
 | 步骤级 | [`lit-pdf-zotero`](skills/lit-pdf-zotero/SKILL.md) | 批量 PDF 获取 + Zotero 入库 + 金字塔/PXYV 罗盘可视化 |
 
-### 03 · 文献分析
+#### 03 · 文献分析
 
 | 层级 | Skill | 用途 |
 |------|-------|------|
-| 任务级 | [`literature-analysis`](skills/literature-analysis/SKILL.md) | 完整文献综述：模块清单 → 蓝图 → gap → 模块生成 → 初稿组装 |
+| 任务级 | [`literature-analysis`](skills/literature-analysis/SKILL.md) | 论文文献综述节的完整流程：模块清单 → 蓝图 → gap → 模块生成 → 初稿组装 |
 | 步骤级 | [`knowledge-module-list`](skills/knowledge-module-list/SKILL.md) | 知识模块清单：跨文档分析，每模块带证据假设 + 独立生成 prompt |
 | 步骤级 | [`review-blueprint`](skills/review-blueprint/SKILL.md) | 综述蓝图：模块编排成综述逻辑结构 + 可视化 HTML |
 | 步骤级 | [`research-gap-scan`](skills/research-gap-scan/SKILL.md) | Research Gap 识别：组合扫描 + 三问反驳防伪 gap |
 | 步骤级 | [`knowledge-module-gen`](skills/knowledge-module-gen/SKILL.md) | 知识模块生成：机械抽取 spec + map-reduce 逐篇 + 页码诚实 + 执行日志 |
 | 步骤级 | [`critical-paper-reading`](skills/critical-paper-reading/SKILL.md) | 单篇论文批判性阅读（UOW 框架：Description → Analysis → Evaluation + 四维 interrogation），产出结构化批注；组装初稿时深读产物自动并入 Section 2 |
-| 步骤级 | [`review-draft-assembly`](skills/review-draft-assembly/SKILL.md) | 综述初稿组装：三 Section 组装 + 引用核验 + 反 AI 味 + docx |
+| 步骤级 | [`review-draft-assembly`](skills/review-draft-assembly/SKILL.md) | 论文文献综述节组装：三 Section 组装 + 引用核验 + 反 AI 味 + docx |
 
-### 04 · 研究设计
+#### 04 · 研究设计
 
 | 层级 | Skill | 用途 |
 |------|-------|------|
@@ -85,7 +115,7 @@
 | 步骤级 | [`methods-map`](skills/methods-map/SKILL.md) | 方法地图：逐篇扫描方法论 9 字段 + methodology plugin + 2-3 个设计方案 + 可视化 |
 | 步骤级 | [`methodology-draft`](skills/methodology-draft/SKILL.md) | 研究设计初稿：段骨架 + 可执行设计清单 + 干净版 Sec 4 方法论 draft |
 
-### 05 · 数据分析
+#### 05 · 数据分析
 
 | 层级 | Skill | 用途 |
 |------|-------|------|
@@ -94,7 +124,7 @@
 | 方法级 | [`analyze-quantitative-data`](skills/analyze-quantitative-data/SKILL.md) | 定量分析全流程（Neuman Ch12，内含 7 个 prompt，见下） |
 | 方法级 | [`analyze-qualitative-data`](skills/analyze-qualitative-data/SKILL.md) | 定性分析全流程（Neuman Ch14，内含 11 个 prompt，见下） |
 
-### 06 · 全文初稿
+#### 06 · 全文初稿
 
 | 层级 | Skill | 用途 |
 |------|-------|------|
@@ -102,12 +132,55 @@
 | 步骤级 | [`article-framework`](skills/article-framework/SKILL.md) | 反推文章框架：5 Part 骨架 + 引用预算 + 结构对照 + 可视化 |
 | 步骤级 | [`fulltext-draft`](skills/fulltext-draft/SKILL.md) | 全文初稿扩写：骨架 → 可打磨的段落散文（管线终点） |
 
-### S · 数据 Skill 工坊（自己造 skill）
+#### 配套 · 数据 Skill 工坊（自己造 skill）
 
 | 层级 | Skill | 用途 |
 |------|-------|------|
 | 步骤级 | [`skill-workshop-plan`](skills/skill-workshop-plan/SKILL.md) | 规划 + 找料：诊断要不要造、造哪几个 + 下载权威方法学源材料 |
 | 步骤级 | [`skill-forge`](skills/skill-forge/SKILL.md) | 源材料 → 成品 skill：5 阶段 2 停点链路（Claude Code / Codex 双平台规范） |
+
+### 工作流二 · 综述文章
+
+把文献本身作为研究材料，完成一篇独立的综述文章。系统、半系统 / 叙事、整合式三型共用检索筛选入口，证据综合与成文按选定类型分流。
+
+#### 01 · 综述选题
+
+| 层级 | Skill | 用途 |
+|------|-------|------|
+| 任务级（复用） | [`topic-workbench`](skills/topic-workbench/SKILL.md) | 尚未定型时的分诊入口：判断文章类型，再转入对应综述选题 skill |
+| 步骤级 | [`topic-review-systematic`](skills/topic-review-systematic/SKILL.md) | 综述① 系统综述：三阶段选题教练（窄问题 + 纳入排除 + 检索协议 · PRISMA） |
+| 步骤级 | [`topic-review-semisystematic`](skills/topic-review-semisystematic/SKILL.md) | 综述② 半系统/叙事：三阶段选题教练（组织框架 + 研究议程 · RAMESES） |
+| 步骤级 | [`topic-review-integrative`](skills/topic-review-integrative/SKILL.md) | 综述③ 整合式：三阶段选题教练（批判性整合 → 新框架/类型学 · Torraco） |
+
+#### 02 · 检索与筛选
+
+| 层级 | Skill | 用途 |
+|------|-------|------|
+| 任务级 | [`sr-search-record`](skills/sr-search-record/SKILL.md) | 三型通用的检索与筛选：检索式校准 → 抓取去重 → 相关性排序截断 → 题名 / 摘要筛选 → 引文追踪 → Zotero 入库，产出检索记录、纳入排除标准与选择流程数字 |
+
+当前实现采用**摘要层定稿**：筛选阶段不获取全文，也不进行全文合格性评估；综合阶段再获取全文并标注证据级别。系统综述必须如实披露这一流程边界，不能把当前产出称为完整 PRISMA 流程。
+
+#### 03 · 证据综合
+
+| 层级 | Skill | 用途 |
+|------|-------|------|
+| 方法级 | [`review-synthesis`](skills/review-synthesis/SKILL.md) | 获取纳入文献全文并综合证据：系统型按可比性做 meta-analysis 或 SWiM 综合；半系统型做主题 / meta-narrative 综合；整合式做批判性概念整合，产出研究发现 |
+
+#### 04 · 综述文章初稿
+
+| 层级 | Skill | 用途 |
+|------|-------|------|
+| 步骤级 | [`review-draft`](skills/review-draft/SKILL.md) | 根据综述类型、研究发现与筛选记录扩写整篇文章，逐条核验引用，生成参考文献表及 Markdown / Word 初稿 |
+
+综述文章默认使用项目内的 `RV_综述/` 子树：`01_选题/` → `02_检索筛选/` → `03_综合成文/`。证据综合使用 `review-synthesis`，成文使用 `review-draft`；期刊初稿中的 `data-analysis-round` 与 `review-draft-assembly` 分别处理单项研究数据和论文文献综述节。
+
+### 后续扩展与归类规则
+
+1. **先定工作流，再列阶段和 skill**：新工作流在 Skills 树中新增一级分支，并说明适用任务、阶段顺序与最终产出。
+2. **新增 skill 归入对应阶段**：在所属工作流的阶段表中补充名称、用途与链接，同时更新树和 skill 总数。辅助工具放在所属工作流的“配套”阶段。
+3. **跨工作流复用同一份 skill**：可在多条工作流中列出入口，并标注复用；保留同一个源目录，统计时只计一次。
+4. **新增独立 skill 库也按工作流登记**：在对应工作流下列出库名、仓库链接、覆盖阶段与安装入口；跨工作流的库分别链接到相关工作流，库内也沿用“工作流 → 阶段 → skill”的导航。
+5. **导航与安装路径分开维护**：工作流分类体现在 README；本库继续使用 `skills/<name>/`，保持已有链接和安装方式可用。其他库的 skills 单独标注数量，本库总数只统计本库实际收录的目录。
 
 ---
 
@@ -193,7 +266,10 @@ cp -r ai-academic-workflow/skills/* "${CODEX_HOME:-$HOME/.codex}/skills/"
 - "批判性阅读这篇 paper" / "评一下这篇文章" → `critical-paper-reading`
 - "拆这篇 model paper" → `model-paper-deconstruct`
 - "把这本教科书 PDF 做成 skill" → `skill-forge`
-- "帮我搜文献入 Zotero"（完整任务）→ `literature-search`；"做文献综述" → `literature-analysis`
+- "为我的研究论文搜文献入 Zotero"（完整任务）→ `literature-search`；"写论文中的文献综述节" → `literature-analysis`
+- "我要写一篇独立综述文章，先帮我选型" → `topic-workbench` → 对应 `topic-review-*`
+- "跑综述的文献检索和筛选" → `sr-search-record`
+- "综合我的综述语料库" → `review-synthesis`；"写综述文章初稿" → `review-draft`
 
 ---
 
