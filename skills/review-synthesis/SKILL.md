@@ -1,13 +1,13 @@
 ---
 name: review-synthesis
-description: 综述文章的证据综合（乔淼PhD · AI学术训练营 · AI学术工作流 · 综述文章工作台 阶段③）。把最终纳入的文献全文综合成 研究发现.md：按 选题.md 锚块的 review_type 三路分流——systematic 走 meta-analysis（效应量/异质性/敏感性/发表偏倚/偏倚风险/GRADE）或降级为 SWiM 定性系统综述；semi-systematic 走主题综合与 meta-narrative（RAMESES）；integrative 走概念整合出新框架（Torraco）。方法锚 Snyder (2019) + Cochrane Handbook + RAMESES + Torraco (2005)。**这是综述文章专用，不要用实证论文的 data-analysis-round / analyze-quantitative-data 代替**（那两个锚的是单研究数据分析，没有效应量合成）。Trigger on："综合我的综述语料库"、"做 meta-analysis"、"把纳入文献综合成研究发现"、"主题综合 / meta-narrative / 整合式综述的综合"、"synthesize my review corpus"、"run the synthesis for my systematic review"。
+description: 综述文章的证据综合（乔淼PhD · AI学术训练营 · AI学术工作流 · 综述文章工作台 阶段③）。把最终纳入的文献全文综合成 证据综合.md：按 综述选题.md 锚块的 review_type 三路分流——systematic 走 meta-analysis（效应量/异质性/敏感性/发表偏倚/偏倚风险/GRADE）或降级为 SWiM 定性系统综述；semi-systematic 走主题综合与 meta-narrative（RAMESES）；integrative 走概念整合出新框架（Torraco）。方法锚 Snyder (2019) + Cochrane Handbook + RAMESES + Torraco (2005)。**这是综述文章专用，不要用实证论文的 data-analysis-round / analyze-quantitative-data 代替**（那两个锚的是单研究数据分析，没有效应量合成）。Trigger on："综合我的综述语料库"、"做 meta-analysis"、"把纳入文献综合成研究发现"、"主题综合 / meta-narrative / 整合式综述的综合"、"synthesize my review corpus"、"run the synthesis for my systematic review"。
 ---
 
 # Review Synthesis · 综述文章的证据综合
 
-把**最终纳入的研究**综合成 `研究发现.md`——综述文章的 Results/Synthesis 节的权威输入（下游 `review-draft` 直接用）。
+把**最终纳入的研究**综合成 `证据综合.md`——综述文章的 Results/Synthesis 节的权威输入（下游 `review-draft` 直接用）。
 
-**三型三方法，由 `选题.md` 机器锚块的 `review_type` 决定，不得中途换型。**
+**三型三方法，由 `综述选题.md` 机器锚块的 `review_type` 决定，不得中途换型。**
 
 | review_type | 报告规范 | 综合路线 |
 |---|---|---|
@@ -17,10 +17,10 @@ description: 综述文章的证据综合（乔淼PhD · AI学术训练营 · AI�
 
 ## 调用约定（独立运行）
 
-- **输入**：① `RV_综述/01_选题/选题.md`（锚块定型 + RQ + 纳入标准）；② 纳入集——`RV_综述/02_检索筛选/筛选决定.csv` 中 `final_decision = include` 的记录；**人还没填 `final_decision` 时用 `ai_decision = include`**（上游是摘要层定稿模式，`ai_decision` 就是纳入决定），并在产出里写明纳入集尚未经人工确认；③ 这些研究的全文——**由本 skill 的 Step 0.5 负责获取**，上游 `sr-search-record` 不取全文。
-- **输出**：默认 `RV_综述/03_综合成文/`；`研究发现.md` 是唯一正式产出，中间产物带前缀不覆盖。
-- **`RV_综述/` 是综述文章在项目里的独立子树**（`01_选题` / `02_检索筛选` / `03_综合成文`），与实证论文那条线彻底隔离。**尤其不要把本 skill 的 `研究发现.md` 写进 `04_数据/`**——实证论文那条线的 `04_数据/研究发现.md` 是另一回事（`findings-synthesis` 的产出），同名不同义，覆盖了从文件名看不出来，下游成文会写出内容错位却看着正常的初稿。
-- **不要求 `03_方法/`**。综述项目没有研究设计初稿——RQ、变量、分层维度一律从 `选题.md` 和抽取表来，**不要去找 `研究设计初稿.md`**。
+- **输入**：① `选题/综述选题.md`（锚块定型 + RQ + 纳入标准）；② 纳入集——`文献/检索筛选/筛选决定.csv` 中 `final_decision = include` 的记录；**人还没填 `final_decision` 时用 `ai_decision = include`**（上游是摘要层定稿模式，`ai_decision` 就是纳入决定），并在产出里写明纳入集尚未经人工确认；③ 这些研究的全文——**由本 skill 的 Step 0.5 负责获取**，上游 `sr-search-record` 不取全文。
+- **输出**：默认项目的 `数据/`（按项目 AGENTS.md「文件放哪」表——综述里文献就是数据；没有项目结构时落当前工作目录）；`证据综合.md` 是唯一正式产出，中间产物带 `综合-` 前缀、多轮不覆盖。项目说明里约定了 `RV_综述/` 子树的老项目，以项目约定为准（选题 `RV_综述/01_选题/选题.md`、台账 `RV_综述/02_检索筛选/`、产出 `RV_综述/03_综合成文/研究发现.md`）。
+- **特意不叫 `研究发现.md`**：同一个项目里可以既写实证论文又写综述文章，`数据/研究发现.md` 是实证论文那条线的产出（`findings-synthesis`），同名不同义，覆盖了从文件名看不出来，下游成文会写出内容错位却看着正常的初稿。**不要写进或读取 `数据/研究发现.md`。**
+- **不要求 `方法/`**。综述项目没有研究设计初稿——RQ、变量、分层维度一律从 `综述选题.md` 和抽取表来，**不要去找 `研究设计初稿.md`**。
 - **调用方覆盖约定**：调用方（工作台 prompt / 用户）显式给出的参数、输入路径、落盘路径与工具选择，一律覆盖本 skill 的默认；但本 skill 的方法步骤、硬约束与停点不可被省略或稀释——调用方若要求跳过某硬约束，以本 skill 为准并提示冲突。
 
 ## 全局硬约束
@@ -36,7 +36,7 @@ description: 综述文章的证据综合（乔淼PhD · AI学术训练营 · AI�
 
 ## Step 0 · 定型与对账
 
-1. 读 `选题.md` 锚块取 `review_type` / `report_standard` / RQ；**锚块缺失或与用户口述冲突时停下问**（这是合法停点 ①）。
+1. 读 `综述选题.md` 锚块取 `review_type` / `report_standard` / RQ；**锚块缺失或与用户口述冲突时停下问**（这是合法停点 ①）。
 2. 清点纳入集：篇数与 `选择流程.md`（旧项目为 `PRISMA流量.md`）的「纳入集」对不上就停下报差异。
 3. 纳入集里的 `unclear` 记录：**不自动纳入也不自动排除**，单列一节交人裁决，先按"未纳入"综合，人裁决后可增量补。
 
@@ -51,12 +51,12 @@ description: 综述文章的证据综合（乔淼PhD · AI学术训练营 · AI�
 3. 调 `scansci-pdf`（机构 / WebVPN / 多源）
 4. 仍拿不到 → 收手
 
-PDF 落 `RV_综述/02_检索筛选/pdf_download/`（命名 `AuthorYear.pdf`）。回写台账两列：
+PDF 落 `文献/PDF/`（命名 `AuthorYear.pdf`）。回写台账两列：
 
 - `pdf_status` ∈ `oa` / `retrieved` / `not-retrieved`
 - **`evidence_level` ∈ `fulltext` / `abstract`** ← 这一列是本 skill 后面所有标注的依据
 
-**登录页 / 付费墙 HTML 不得当成 PDF 落盘**（校验文件头与页数），误抓的移进 `pdf_download/_invalid/`。
+**登录页 / 付费墙 HTML 不得当成 PDF 落盘**（校验文件头与页数），误抓的移进 `文献/PDF/_invalid/`。
 
 **已知故障（不要踩）**：`zotero_add_from_file` 没有 parent 参数，永远新建父条目——**禁止用它给已入库条目挂 PDF**；zotero-mcp 的 `attach_mode="auto"` 上传失败时仍返回「PDF attached」，**要报告附件状态必须用子项接口复查**；`scansci_pdf_zotero_push` 需要 scansci-pdf 的 MCP env 里配 `ZOTERO_API_KEY`，没配就直接失败——失败不阻塞，PDF 留在本地即可。
 
@@ -64,7 +64,7 @@ PDF 落 `RV_综述/02_检索筛选/pdf_download/`（命名 `AuthorYear.pdf`）�
 
 ## Step 1 · 数据抽取（三型共用，map-reduce 逐篇）
 
-**一篇一行**，逐篇读全文填抽取表 `RV_综述/03_综合成文/综合-抽取表.csv`。**逐篇处理是为了防爆上下文，不是汇报节奏——不要每篇停下汇报。**
+**一篇一行**，逐篇读全文填抽取表 `数据/综合-抽取表.csv`。**逐篇处理是为了防爆上下文，不是汇报节奏——不要每篇停下汇报。**
 
 共用字段：`study_id, 作者年份, evidence_level, 国家/情境, 设计, 样本(n 与构成), 抽样, 数据收集, 关键构念与操作化, 主要结果, 页码/表号, 局限, 资助/利益冲突`
 
@@ -124,17 +124,17 @@ PDF 落 `RV_综述/02_检索筛选/pdf_download/`（命名 `AuthorYear.pdf`）�
   - systematic 型的 meta-analysis **只用 `evidence_level = fulltext` 的研究**；摘要级研究单列在敏感性分析或叙述部分。
 - **局限**：检索源限制（如仅 OpenAlex / 单库）、语言限制、**上游未做全文合格性评估（筛选在题摘层定稿）**、**本轮全文获取率 X/N 及其对结论的影响**、未做的分析（如未做发表偏倚检验及原因）。
 
-## Step 4 · 产出 `RV_综述/03_综合成文/研究发现.md`
+## Step 4 · 产出 `数据/证据综合.md`
 
 结构：① 纳入研究概览（选择流程数字 + 特征表：设计/国别/样本/年份分布 + **证据级别构成：全文 X 篇 / 仅摘要 Y 篇**）；② 偏倚风险 / 质量评价汇总（systematic 必须有；**摘要级研究评不了，标 `无法评级（仅摘要）`，不得给一个猜的评级**）；③ 逐 RQ 的综合结果（每条结论后跟证据表：支持文献 + 页码/表号 + 基数 + 证据级别）；④ 一致性与冲突；⑤ 证据确定性（systematic 走 GRADE；**摘要级证据在"间接性"域降级**）；⑥ 局限；⑦ 溯源表（结论 → study_id → 页码 / `摘要`）。
 
-中间产物：`综合-抽取表.csv`、`综合-meta分析.R`/`.py` 与其输出、`综合-森林图.*`、`综合-主题矩阵.md`、`综合-概念矩阵.md`（按型取用），多轮不覆盖（加 `-R2` / `-R3`），记账追加 `RV_综述/03_综合成文/分析日志.md`。
+中间产物：`综合-抽取表.csv`、`综合-meta分析.R`/`.py` 与其输出、`综合-森林图.*`、`综合-主题矩阵.md`、`综合-概念矩阵.md`（按型取用），多轮不覆盖（加 `-R2` / `-R3`），记账追加 `数据/分析日志.md`。
 
 **未跑完时**：产出开头必须放醒目警告——已综合 X / N 篇、结论均为部分值、不得据此成文，并写清续跑位置。
 
 ## 与其他 skill 的边界
 
 - **上游**：检索与筛选 → `sr-search-record`（本 skill 不做检索、**不改纳入集**）。上游是**摘要层定稿**：纳入集在摘要层已定，没有全文筛选层，所以**全文获取归本 skill 的 Step 0.5**，且取不到全文不得改动纳入集。
-- **下游**：成文 → `review-draft`（本 skill 只出 `研究发现.md`，不写正文）。
+- **下游**：成文 → `review-draft`（本 skill 只出 `证据综合.md`，不写正文）。
 - **不要用 `data-analysis-round` / `analyze-quantitative-data` / `analyze-qualitative-data` 代替本 skill**：那三个是**实证论文**的单研究数据分析（锚 Neuman Ch12/Ch14——codebook、单变量/双变量、回归、elaboration、三段编码），**不含效应量合成、异质性、发表偏倚、GRADE 中的任何一项**，做不了 meta-analysis。实证论文分析自己的数据集时才用它们。
 - 多轮综合的汇总仍可复用 `findings-synthesis` 的记账思路，但方法以本 skill 为准。

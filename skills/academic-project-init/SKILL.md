@@ -33,14 +33,15 @@ description: AI 学术研究项目初始化（乔淼PhD · AI学术训练营 · 
 
 | 放什么 | 放哪 |
 |---|---|
-| 选题（选题.md） | 选题/ |
+| 选题（选题.md；综述文章是 综述选题.md） | 选题/ |
 | 文献清单、检索候选、验真报告、金字塔分层、入库报告、文献可视化 | 文献/ |
 | 文献 PDF（命名 AuthorYear.pdf） | 文献/PDF/ |
+| 综述文章的检索筛选记录（检索配置、全量记录、筛选台账、纳入排除标准、选择流程、待复核清单、验真 / 降级记录） | 文献/检索筛选/ |
 | 知识模块清单、综述蓝图、Gap、综述初稿（含 .docx）、引用核验报告、单篇深读（深读-AuthorYear.md） | 文献/ |
 | 知识模块 M1…Mn、模块执行日志 | 文献/知识模块/ |
 | 方法地图、研究设计初稿、设计说明 | 方法/ |
-| 原始数据、每轮分析产出、分析日志、研究发现 | 数据/ |
-| Model Paper 拆解、文章框架、全文初稿 | 写作/ |
+| 原始数据、每轮分析产出、分析日志、研究发现（综述文章：证据综合.md、综合抽取表、各型综合产出） | 数据/ |
+| Model Paper 拆解、文章框架、全文初稿、综述文章初稿（含 .docx、引用核验报告） | 写作/ |
 | 数据 skill 工坊的源材料 | skill源材料/ |
 ```
 
@@ -62,8 +63,10 @@ description: AI 学术研究项目初始化（乔淼PhD · AI学术训练营 · 
 | 研究设计 | research-design（methods-map → methodology-draft） | 选题/、文献/ | 方法/方法地图.md/.html、研究设计初稿.md、研究设计-设计说明.md |
 | 数据分析 | data-analysis-round（多轮）→ findings-synthesis | 方法/、数据/ | 数据/（每轮带前缀不覆盖）+ 分析日志.md → 研究发现.md |
 | 全文初稿 | model-paper-deconstruct → article-framework → fulltext-draft | 选题/、文献/、方法/、数据/ | 写作/Model-Paper-拆解-*.md、文章框架.md、全文初稿.md |
+| 综述文章（独立成篇的综述） | topic-review-{systematic,semisystematic,integrative} → sr-search-record → review-synthesis → review-draft | 选题/综述选题.md、文献/检索筛选/、数据/证据综合.md | 选题/综述选题.md、文献/检索筛选/、文献/PDF/、数据/证据综合.md + 数据/综合-*、写作/综述文章初稿.md |
 | 数据 skill 工坊 | skill-workshop-plan → skill-forge | 方法/ | skill源材料/；skill 成品落 ~/.claude/skills/ 或 ~/.codex/skills/（项目外） |
 
 - 文献全文默认读 文献/PDF/ 下的本地 PDF，也可走 Zotero。
-- 旧项目（01_选题 / 02_文献 / … 那套）不搬文件，照旧按它自己的命名表。
+- 旧项目（01_选题 / 02_文献 / … 那套）不搬文件，照旧按它自己的命名表；综述文章的老项目在项目说明里约定了 `RV_综述/` 的，照旧按 `RV_综述/`。
+- 综述文章的选题、综合特意不叫 选题.md / 研究发现.md，免得和写论文的产出撞名。
 - 不编造文献；缺失的引用用 [TBD-citation] 占位、缺失信息用 [待补] 占位。
