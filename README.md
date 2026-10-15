@@ -1,18 +1,19 @@
 # AI学术工作流 · 「AI学术训练营」skills 库（乔淼PhD）
 
-> 「**AI学术训练营**」（乔淼PhD）配套的 **AI学术工作流** skills 库，按 **期刊初稿**、**综述文章** 两条工作流组织，共 **37 个 skills**。先选要完成的工作流，再按阶段调用 skill；也可以独立运行某一步。支持 Claude Code / Codex。
+> 「**AI学术训练营**」（乔淼PhD）配套的 **AI学术工作流** skills 库，按 **期刊初稿**、**综述文章**、**投稿与审稿** 三条工作流组织，共 **44 个 skills**。先选要完成的工作流，再按阶段调用 skill；也可以独立运行某一步。支持 Claude Code / Codex。
 >
 > **谁在用**：AI学术训练营学员
 ---
 
 ## 这是什么
 
-本仓库目前收录两条工作流，分别面向研究性论文初稿与独立的综述文章：
+本仓库目前收录三条工作流，覆盖研究性论文初稿、独立综述文章，以及已有稿件的改稿、投稿和返修：
 
 | 工作流 | 阶段 | 目标产出 |
 |--------|------|----------|
 | **期刊初稿** | 选题 → 文献搜索 → 文献分析 → 研究设计 → 数据分析 → 全文初稿 | 一篇研究性论文的全文初稿 |
 | **综述文章** | 综述选题 → 检索与筛选 → 证据综合 → 综述文章初稿 | 一篇系统 / 半系统·叙事 / 整合式综述文章 |
+| **投稿与审稿** | 材料核实 → 初稿诊断与改稿 → 期刊要求核对 → 投稿包；收到意见后进入回应决策与返修 | 待作者确认的修订稿、投稿包及返修回复 |
 
 工作流内的方法论锚点与训练营课程一致：
 
@@ -26,11 +27,11 @@
 训练营学员手里有两件配套工具，**分工不交叉**：
 
 - **AI学术工作台**（单文件 HTML，随课发放）——为每条工作流中各阶段的**流畅交接**而优化：填表出 prompt、产出按命名表落盘、下一步自动读上一步。适合从头到尾跑通一篇论文。
-- **本仓库的 skills 库**——把各条工作流拆到**步骤颗粒度**：每个 self-contained 的功能和步骤都是一个独立 skill，单个 skill 就能运行。适合脱离整篇论文的特定任务（单独搜一批文献、单独验真一份参考文献、单独找 research gap、单独拆一篇范文……），也适合按自己的需要排列组合。
+- **本仓库的 skills 库**——把各条工作流拆到**步骤颗粒度**：按具体功能和步骤提供 skills，多数可独立运行；投稿与审稿的业务方法需配套安装共用入口和支持文件。适合脱离整篇论文的特定任务（单独搜一批文献、单独验真一份参考文献、单独找 research gap、单独拆一篇范文……），也适合按自己的需要排列组合。
 
 每个 skill 都是同一个三层拼装：
 
-- 📖 **方法论** — 每一步锚定权威来源（上表），不是 AI 即兴发挥
+- 📖 **方法依据** — 记录方法文献或已确认的项目设计；投稿与审稿各 skill 的 `references/` 保留来源与适用边界
 - 🤖 **Skill** — 把方法步骤翻译成 Claude Code / Codex 能执行的指令，硬约束写死（不编造文献、验真零容忍、零结果合法呈现、每个数值报 N）
 - 👤 **你** — 理论判断 / 关键选择 / 实质性意义（每个 checkpoint 都停下等你拍板，AI 不替你做主）
 
@@ -38,7 +39,7 @@
 
 ---
 
-## Skills 树（按工作流分类 · 37 个）
+## Skills 树（按工作流分类 · 44 个）
 
 以下是使用导航，按 **工作流 → 阶段 → skill** 展开；仓库中的安装目录仍为 `skills/<name>/`。同一个 skill 可被多条工作流复用，数量按唯一 skill 目录统计，不重复计数。
 
@@ -53,11 +54,19 @@ AI学术工作流
 │   ├── 05 数据分析
 │   ├── 06 全文初稿
 │   └── 配套：数据 Skill 工坊
-└── 综述文章
-    ├── 01 综述选题（系统 / 半系统·叙事 / 整合式）
-    ├── 02 检索与筛选
-    ├── 03 证据综合
-    └── 04 综述文章初稿
+├── 综述文章
+│   ├── 01 综述选题（系统 / 半系统·叙事 / 整合式）
+│   ├── 02 检索与筛选
+│   ├── 03 证据综合
+│   └── 04 综述文章初稿
+└── 投稿与审稿
+    ├── 共用：任务登记与材料核实 · submission-task-intake
+    ├── 01 初稿诊断 · manuscript-diagnosis
+    ├── 02 批准范围内改稿 · manuscript-revision
+    ├── 03 期刊要求核对 · journal-requirements-check
+    ├── 04 投稿包整理 · submission-package-preparation
+    ├── 05 审稿意见与回应决策 · review-response-planning
+    └── 06 返修改稿与逐条回复 · review-revision-response
 ```
 
 **任务级** skill 编排一个阶段的完整任务；**步骤级** skill 执行具体步骤；**方法级** skill 提供分析方法。各 skill 按自身约定保留人工判断与确认节点。
@@ -174,6 +183,26 @@ AI学术工作流
 
 综述文章默认使用项目内的 `RV_综述/` 子树：`01_选题/` → `02_检索筛选/` → `03_综合成文/`。证据综合使用 `review-synthesis`，成文使用 `review-draft`；期刊初稿中的 `data-analysis-round` 与 `review-draft-assembly` 分别处理单项研究数据和论文文献综述节。
 
+### 工作流三 · 投稿与审稿
+
+面向已有稿件的人文社科作者，可从初稿诊断、投稿准备或收到审稿意见处进入。期刊初稿或综述文章形成初稿后，按当前材料和作者批准范围接入本工作流；进入投稿或返修时无需重跑已完成阶段。
+
+| 阶段 | Skill | 用途 |
+|------|-------|------|
+| 共用前置 | [`submission-task-intake`](skills/submission-task-intake/SKILL.md) | 核实项目、匿名任务标识、材料版本与作者批准范围，随首个业务阶段完成登记 |
+| 01 初稿诊断 | [`manuscript-diagnosis`](skills/manuscript-diagnosis/SKILL.md) | 诊断论证和证据，生成带原文定位、稳定问题 ID、修改建议及作者决定的诊断表 |
+| 02 批准范围内改稿 | [`manuscript-revision`](skills/manuscript-revision/SKILL.md) | 仅实施已批准问题，保留逐项修改对照与未完成项，形成待作者确认稿 |
+| 03 期刊要求核对 | [`journal-requirements-check`](skills/journal-requirements-check/SKILL.md) | 从指定期刊的实际可读要求形成来源、适用范围、强制 / 建议及差距矩阵 |
+| 04 投稿包整理 | [`submission-package-preparation`](skills/submission-package-preparation/SKILL.md) | 依据确认稿、要求矩阵与真实声明事实整理投稿或返修材料，保留格式和实名待补状态 |
+| 05 审稿意见与回应决策 | [`review-response-planning`](skills/review-response-planning/SKILL.md) | 保留意见原文，拆分稳定 ID，提出证据需求和回应方案，等待作者逐项决定 |
+| 06 返修改稿与逐条回复 | [`review-revision-response`](skills/review-revision-response/SKILL.md) | 先落实获准返修，再据实际修订稿写逐条回复，核对意见、改动、位置与未完成项 |
+
+六个业务方法均先读取项目 `skills/submission-task-intake/SKILL.md`，各自还需读取 `references/source-basis.md`；质性初稿诊断另读 `references/qualitative-criteria.md`。请使用下方“投稿与审稿 · 项目内安装”说明，完整复制目录。
+
+返修经作者确认后回到“期刊要求核对 → 投稿包整理”。业务结果按原方法写入 `产出/<任务标识>/`，作者决定、基准稿和轮次均需可追溯；最终投稿与对外发送由作者决定。
+
+来源为 [`ai-submission-review-skills`](https://github.com/qiaomiaojoe/ai-submission-review-skills)，2026-10-15 合入本库。七个方法及支持文件保持来源版本；安装、版本与验证边界见 [投稿与审稿使用说明](docs/workflows/submission-review.md)。
+
 ### 后续扩展与归类规则
 
 1. **先定工作流，再列阶段和 skill**：新工作流在 Skills 树中新增一级分支，并说明适用任务、阶段顺序与最终产出。
@@ -253,7 +282,13 @@ mkdir -p "${CODEX_HOME:-$HOME/.codex}/skills"
 cp -r ai-academic-workflow/skills/* "${CODEX_HOME:-$HOME/.codex}/skills/"
 ```
 
-只想要某几个 skill？拷对应目录即可——**每个 skill 自包含，单独装单独用**。
+只想要某几个 skill？拷对应完整目录，并保留其 `references/` 等支持文件。**投稿与审稿的六个业务方法还依赖 `submission-task-intake`，按下方说明在论文项目内配套安装。**
+
+### 投稿与审稿 · 项目内安装
+
+全局安装可发现这七个方法；执行时，六个业务方法还会读取论文项目内的 `skills/submission-task-intake/SKILL.md`。请从本库将七个完整目录复制到论文项目的 `skills/`，保留全部 `references/`；同名目录先比较，更新前备份，不覆盖项目定制版。
+
+具体复制命令、首次调用方式及版本说明见 [投稿与审稿使用说明](docs/workflows/submission-review.md)。业务项目中的 `AGENTS.md`、`CLAUDE.md` 与 `投稿与审稿规范.md` 由该项目提供，缺项按方法规则处理；无需把稿件、审稿意见、作者决定或业务日志放进本库。
 
 ### 触发例句（装好后直接说）
 
@@ -270,13 +305,16 @@ cp -r ai-academic-workflow/skills/* "${CODEX_HOME:-$HOME/.codex}/skills/"
 - "我要写一篇独立综述文章，先帮我选型" → `topic-workbench` → 对应 `topic-review-*`
 - "跑综述的文献检索和筛选" → `sr-search-record`
 - "综合我的综述语料库" → `review-synthesis`；"写综述文章初稿" → `review-draft`
+- "诊断这份初稿，保留我的核心观点" → `manuscript-diagnosis`；"按我批准的问题清单改稿" → `manuscript-revision`
+- "核对目标期刊要求并整理投稿材料" → `journal-requirements-check` → 确认要求后 `submission-package-preparation`
+- "拆解审稿意见，先给我回应方案" → `review-response-planning`；"按已确认意见返修并写逐条回复" → `review-revision-response`
 
 ---
 
 ## Skills 设计原则
 
-1. **单个 skill 可独立运行**：输入按"你直接给的 > 项目结构自动读 > 问最小输入"三级解析，不因缺上游文件卡住。
-2. **可组合**：在 `academic-project-init` 建的项目结构里，产出按 CLAUDE.md 命名表落盘，下游 skill 自动衔接；步骤级 skills 也可以按你的需要任意排列组合。
+1. **按任务调用**：期刊初稿与综述文章的步骤按各自最小输入独立运行；投稿与审稿六个业务方法先执行共用材料核实，缺少必要输入或批准时按其规则局部停止。
+2. **按工作流交接**：期刊初稿按项目命名表落盘，综述文章使用 `RV_综述/`，投稿与审稿使用 `产出/<任务标识>/`。跨工作流显式核实输入路径、材料版本与作者确认范围，沿用各方法的交接约定。
 3. **硬约束不稀释**：不编造文献（[TBD-citation] 占位）、验真零容忍、零结果合法呈现（Neuman p.426）、CRITICAL/REFUSE 原样保留。
 4. **Checkpoint 必停**：方案选择、准则确认、落盘审批等关键节点必须停下等你拍板。
 5. **Prompt 三段结构**（与训练营讲授一致）：前段喂 context → 中段学术逻辑（含硬约束）→ 后段落盘规范。
