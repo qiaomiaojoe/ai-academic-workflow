@@ -36,6 +36,10 @@ oa_search.py · 系统综述检索执行器（OpenAlex 主引擎 + Europe PMC �
   python3 oa_search.py epmc   -q '(AI) AND (MESH:"Education, Nursing")' -o .../epmc
 
 约定：所有请求带 mailto 进 OpenAlex 礼貌池；失败重试 3 次；不静默吞错。
+OpenAlex 翻页（游标第二页起）要 API key（https://help.openalex.org/api/authentication/）：
+  key 依次读环境变量 OPENALEX_API_KEY → 文件 ~/.config/openalex/api_key；
+  mailto 依次读 OPENALEX_MAILTO → ~/.config/openalex/mailto。
+  key 只放进请求参数，绝不打印、不写进任何输出文件或日志（报错里的 URL 也会把它抹掉）。
 """
 
 import argparse
@@ -52,12 +56,38 @@ import urllib.request
 
 OA_BASE = "https://api.openalex.org/works"
 EPMC_BASE = "https://www.ebi.ac.uk/europepmc/webservices/rest/search"
-MAILTO = os.environ.get("OPENALEX_MAILTO", "").strip()
+
+
+def _setting(env, fname):
+    """先读环境变量，没有再读 ~/.config/openalex/<fname>（去掉首尾空白）。"""
+    v = os.environ.get(env, "").strip()
+    if v:
+        return v
+    try:
+        with open(os.path.join(os.path.expanduser("~"), ".config", "openalex", fname), encoding="utf-8") as f:
+            return f.read().strip()
+    except OSError:
+        return ""
+
+
+MAILTO = _setting("OPENALEX_MAILTO", "mailto")
+API_KEY = _setting("OPENALEX_API_KEY", "api_key")
+NO_KEY_MSG = ("OpenAlex 翻页需要 API key：在 AI学术工作站 左下角「AI学术环境配置」→ OpenAlex 里填，"
+              "或写进 ~/.config/openalex/api_key")
+PER_PAGE = 100  # OpenAlex 官方上限
 UA = "sr-search-record/1.0 (systematic review search; AI academic workflow)"
 PAUSE = 0.12
 
 
 # ---------------------------------------------------------------- HTTP
+
+class AuthError(Exception):
+    """HTTP 401/403：OpenAlex 要 API key（或 key 无效）。"""
+
+
+def _redact(url):
+    return re.sub(r"(api_key=)[^&]*", r"\1***", url)
+
 
 def _get(url, tries=5):
     """指数退避。OpenAlex 限流（429）时不要立刻放弃——限流是常态，不是失败。"""
@@ -69,6 +99,8 @@ def _get(url, tries=5):
                 return json.load(r)
         except urllib.error.HTTPError as e:
             last = "HTTP %s %s" % (e.code, e.reason)
+            if e.code in (401, 403) and OA_BASE in url:
+                raise AuthError(last)
             if e.code in (429, 500, 502, 503):
                 wait = min(60, 4 * (2 ** i))
                 sys.stderr.write("[oa_search] %s，%d 秒后重试（第 %d/%d 次）\n" % (last, wait, i + 1, tries))
@@ -81,15 +113,23 @@ def _get(url, tries=5):
     die("请求失败：%s\n  URL: %s\n"
         "  429 持续不退时的降级出路：等 30–60 分钟再跑；或把 filters.publication_year 拆成几段分批抓，\n"
         "  抓到的部分照常进流程，覆盖缺口写进检索记录的降级记录节——**不要因为限流停下整条流水线**。"
-        % (last, url))
+        % (last, _redact(url)))
 
 
-def oa(params):
+def oa(params, auth_ok=False):
+    """auth_ok=True 时 401/403 抛 AuthError 给调用方降级；否则直接报错退出。"""
     p = dict(params)
     if MAILTO:
         p["mailto"] = MAILTO
+    if API_KEY:
+        p["api_key"] = API_KEY
     time.sleep(PAUSE)
-    return _get(OA_BASE + "?" + urllib.parse.urlencode(p))
+    try:
+        return _get(OA_BASE + "?" + urllib.parse.urlencode(p))
+    except AuthError as e:
+        if auth_ok:
+            raise
+        die("%s。%s%s" % (e, NO_KEY_MSG, "" if not API_KEY else "（已读到 key，但 OpenAlex 不认，检查是否填错或过期）"))
 
 
 def die(msg):
@@ -367,12 +407,18 @@ def pull(filters, blocks, field, cap=0, stats=None):
     """翻页抓取并去重。stats 传入一个 dict 时回填：
        raw      = 实际遍历过的原始记录数（不是 meta.count）
        dups     = 因同 DOI / 同题名被去掉的条数
-       truncated= 是否因 cap 提前停止（此时"没抓到的"不等于"重复的"）"""
+       truncated= 是否因 cap 提前停止（此时"没抓到的"不等于"重复的"）
+       auth_stop= 是否因翻页要 API key（401）提前停止——已抓到的照常返回，供降级使用"""
     out, cursor, seen = [], "*", set()
     raw = dups = 0
-    truncated = False
+    truncated = auth_stop = False
     while True:
-        d = oa({"filter": ",".join(filters), "per_page": 200, "cursor": cursor, "select": SELECT})
+        try:
+            d = oa({"filter": ",".join(filters), "per_page": PER_PAGE, "cursor": cursor, "select": SELECT},
+                   auth_ok=bool(out))
+        except AuthError:
+            auth_stop = True
+            break
         for w in d["results"]:
             raw += 1
             r = flatten(w, field, blocks)
@@ -389,7 +435,7 @@ def pull(filters, blocks, field, cap=0, stats=None):
             truncated = True
             break
     if stats is not None:
-        stats.update({"raw": raw, "dups": dups, "truncated": truncated})
+        stats.update({"raw": raw, "dups": dups, "truncated": truncated, "auth_stop": auth_stop})
     return out
 
 
@@ -430,7 +476,13 @@ def cmd_fetch(cfg, args):
     write_out(rows, args.out)
     print("摘要覆盖：%d/%d (%.0f%%)；无摘要的不得据题名排除，保留到全文阶段。"
           % (n_ab, len(rows), 100.0 * n_ab / max(len(rows), 1)))
-    if st.get("truncated"):
+    if st.get("auth_stop"):
+        print("!! %s。" % NO_KEY_MSG)
+        print("!! 翻页在第 %s 条之后被 OpenAlex 拒绝（HTTP 401），检索式实际命中 %s 条，**还有约 %s 条没抓**。"
+              "已抓到的先照常进流程；这是降级，写进降级记录，收尾汇报提醒用户去环境配置里填 key 后重跑 fetch。"
+              % (format(st["raw"], ","), format(total, ","), format(max(total - st["raw"], 0), ",")))
+        print("!! 没抓到的那部分**不是去重差额，不得写进 PRISMA**；PRISMA 数字要等有 key 的完整抓取。")
+    elif st.get("truncated"):
         print("!! 抓取被 --cap %d 截断：只遍历了前 %s 条（其中同 DOI/同题名重复 %d 条），"
               "检索式实际命中 %s 条，**还有约 %s 条没抓**。"
               % (args.cap, format(st["raw"], ","), st["dups"],
@@ -485,10 +537,15 @@ def cmd_cite(cfg, args):
         for w in pull(["openalex_id:" + chunk] + lim, blocks, field):
             w["found_via"] = "citation:backward"
             rows.append(w)
+    cut = 0
     for oid, d in seeds:
-        for w in pull(["cites:" + oid] + lim, blocks, field):
+        st = {}
+        for w in pull(["cites:" + oid] + lim, blocks, field, stats=st):
             w["found_via"] = "citation:forward(%s)" % d
             rows.append(w)
+        cut += 1 if st.get("auth_stop") else 0
+    if cut:
+        print("!! %d 篇种子的前向引用翻页被拒（HTTP 401），只拿到第一页——写进降级记录。%s。" % (cut, NO_KEY_MSG))
 
     seen, uniq = set(), []
     for r in rows:
@@ -926,7 +983,9 @@ def main():
     args = ap.parse_args()
 
     if not MAILTO and args.cmd in ("probe", "recall", "fetch", "cite", "epmc", "add"):
-        sys.stderr.write("[oa_search] 提示：未设 OPENALEX_MAILTO，未进礼貌池，量大时可能限流。\n")
+        sys.stderr.write("[oa_search] 提示：未设 OPENALEX_MAILTO（也没有 ~/.config/openalex/mailto），未进礼貌池，量大时可能限流。\n")
+    if not API_KEY and args.cmd in ("fetch", "cite"):
+        sys.stderr.write("[oa_search] 提示：没有 OpenAlex API key，翻页会被拒，只能抓第一页。%s。\n" % NO_KEY_MSG)
     if args.cmd == "epmc":
         cmd_epmc(args)
         return
