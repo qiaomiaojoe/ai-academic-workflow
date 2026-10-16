@@ -42,6 +42,7 @@ description: AI 学术研究项目初始化（乔淼PhD · AI学术训练营 · 
 | 方法地图、研究设计初稿、设计说明 | 方法/ |
 | 原始数据、每轮分析产出、分析日志、研究发现（综述文章：证据综合.md、综合抽取表、各型综合产出） | 数据/ |
 | Model Paper 拆解、文章框架、全文初稿、综述文章初稿（含 .docx、引用核验报告） | 写作/ |
+| 投稿与返修：任务登记、交接记录、修改诊断、修订稿、修改对照、期刊要求矩阵、投稿包、审稿意见台账、返修稿、审稿回复（都带 -R1、-R2 轮次）、投稿分析日志 | 写作/投稿/ |
 | 数据 skill 工坊的源材料 | skill源材料/ |
 ```
 
@@ -64,6 +65,7 @@ description: AI 学术研究项目初始化（乔淼PhD · AI学术训练营 · 
 | 数据分析 | data-analysis-round（多轮）→ findings-synthesis | 方法/、数据/ | 数据/（每轮带前缀不覆盖）+ 分析日志.md → 研究发现.md |
 | 全文初稿 | model-paper-deconstruct → article-framework → fulltext-draft | 选题/、文献/、方法/、数据/ | 写作/Model-Paper-拆解-*.md、文章框架.md、全文初稿.md |
 | 综述文章（独立成篇的综述） | topic-review-{systematic,semisystematic,integrative} → sr-search-record → review-synthesis → review-draft | 选题/综述选题.md、文献/检索筛选/、数据/证据综合.md | 选题/综述选题.md、文献/检索筛选/、文献/PDF/、数据/证据综合.md + 数据/综合-*、写作/综述文章初稿.md |
+| 投稿与返修 | submission-task-intake +（manuscript-diagnosis → manuscript-revision → journal-requirements-check → submission-package-preparation；返修：review-response-planning → review-revision-response → 再回期刊要求核对、投稿包） | 写作/（全文初稿或你自己的稿件）、写作/投稿/ | 写作/投稿/（-R<n> 轮次不覆盖，分析日志.md） |
 | 数据 skill 工坊 | skill-workshop-plan → skill-forge | 方法/ | skill源材料/；skill 成品落 ~/.claude/skills/ 或 ~/.codex/skills/（项目外） |
 
 - 文献全文默认读 文献/PDF/ 下的本地 PDF，也可走 Zotero。

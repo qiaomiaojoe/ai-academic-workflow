@@ -1,6 +1,6 @@
 # AI学术工作流 · 「AI学术训练营」skills 库（乔淼PhD）
 
-> 「**AI学术训练营**」（乔淼PhD）配套的 **AI学术工作流** skills 库：把训练营讲授的完整学术工作流——**选题 → 文献搜索 → 文献分析 → 研究设计 → 数据分析 → 全文初稿**——拆到步骤颗粒度，共 **34 个 skills**。装进 Claude Code / Codex，按任务单独调用，或自由排列组合。
+> 「**AI学术训练营**」（乔淼PhD）配套的 **AI学术工作流** skills 库：把训练营讲授的完整学术工作流——**选题 → 文献搜索 → 文献分析 → 研究设计 → 数据分析 → 全文初稿 → 投稿与返修**——拆到步骤颗粒度，共 **44 个 skills**。装进 Claude Code / Codex，按任务单独调用，或自由排列组合。
 >
 > **谁在用**：AI学术训练营学员
 ---
@@ -101,6 +101,20 @@
 | 步骤级 | [`model-paper-deconstruct`](skills/model-paper-deconstruct/SKILL.md) | 拆 Model Paper：动静虚实四产出高密度拆解（≥6000 字） |
 | 步骤级 | [`article-framework`](skills/article-framework/SKILL.md) | 反推文章框架：5 Part 骨架 + 引用预算 + 结构对照 + 可视化 |
 | 步骤级 | [`fulltext-draft`](skills/fulltext-draft/SKILL.md) | 全文初稿扩写：骨架 → 可打磨的段落散文（管线终点） |
+
+### 07 · 投稿与返修
+
+| 层级 | Skill | 用途 |
+|------|-------|------|
+| 步骤级 | [`submission-task-intake`](skills/submission-task-intake/SKILL.md) | 任务登记：核实材料、版本、作者批准范围（嵌在下面每一步开头，不单独跑） |
+| 步骤级 | [`manuscript-diagnosis`](skills/manuscript-diagnosis/SKILL.md) | 初稿诊断：带问题 ID、原文定位、证据和观点边界的诊断表，交作者决定 |
+| 步骤级 | [`manuscript-revision`](skills/manuscript-revision/SKILL.md) | 修改与定稿：只改作者批准的问题，出修订稿 + 修改对照 |
+| 步骤级 | [`journal-requirements-check`](skills/journal-requirements-check/SKILL.md) | 期刊要求核对：真实要求逐条溯源，对照稿件出差距矩阵 |
+| 步骤级 | [`submission-package-preparation`](skills/submission-package-preparation/SKILL.md) | 投稿包整理：投稿稿、投稿信、逐要求核对（返修包同理） |
+| 步骤级 | [`review-response-planning`](skills/review-response-planning/SKILL.md) | 审稿意见台账：保留原文、拆子项、建议立场与证据需求，交作者逐条决定 |
+| 步骤级 | [`review-revision-response`](skills/review-revision-response/SKILL.md) | 返修改稿与回复：先实际改稿，再逐条回复 + 意见修改对应表 |
+
+产出都在 `写作/投稿/`，文件带 `-R1`、`-R2` 轮次，绝不覆盖；作者批准记录写进 `交接记录-R<n>.md`，AI 不代批。
 
 ### S · 数据 Skill 工坊（自己造 skill）
 
