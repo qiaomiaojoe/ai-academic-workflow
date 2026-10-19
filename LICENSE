@@ -1,48 +1,30 @@
-许可协议（版权所有 · 受限使用）
-=====================================
+许可协议（署名—非商业性使用 4.0 国际 · CC BY-NC 4.0）
+=====================================================
 
-版权所有 © 2026 乔淼（乔淼PhD）。保留所有权利。
-Copyright © 2026 Qiao Miao (乔淼PhD). All rights reserved.
+版权所有 © 2026 乔淼（乔淼PhD）。
+Copyright © 2026 Qiao Miao (乔淼PhD).
 
-本仓库全部内容（包括但不限于全部 skills、prompts、文档与示例，以下称"本作品"）
-是「AI学术训练营」的配套培训材料，属于作者的原创劳动成果，受著作权法保护。
-公开本仓库是为了展示与学员安装的便利，不构成对任何权利的放弃或开放授权。
+本仓库全部内容（包括全部 skills、prompts、文档与示例，以下称"本作品"）自
+2026-10-19 起，按「知识共享 署名—非商业性使用 4.0 国际」许可协议（CC BY-NC 4.0）授权：
 
-一、允许的使用
---------------
-1. **查看与个人学习试用**：任何人可以查看本仓库内容，并在个人的、非商业的
-   学习与研究场景中试用。
-2. **学员使用**：「AI学术训练营」付费学员获得在其个人学术研究中使用本作品的
-   完整授权，包括安装到自己的 Claude Code / Codex 环境、按自己的研究需要
-   调整配置与组合调用。该授权不可转让。
+  协议摘要：https://creativecommons.org/licenses/by-nc/4.0/deed.zh-hans
+  法律文本：https://creativecommons.org/licenses/by-nc/4.0/legalcode.zh-hans
 
-二、未经作者书面许可，禁止的行为
---------------------------------
-1. **再分发**：不得以任何形式向第三方分发本作品或其修改版本，包括但不限于
-   转载、打包、镜像仓库、上传到其他代码托管平台、网盘、知识付费社群或
-   任何公开/半公开渠道。
-2. **商业使用**：不得将本作品用于任何商业目的，包括但不限于付费课程、
-   培训、咨询服务、SaaS 或其他盈利性产品与服务。
-3. **去除署名**：不得移除、修改或隐匿本作品中的作者署名、品牌标识
-   （乔淼PhD / AI学术训练营 / AI学术工作流）与来源信息。
+你可以：
+- 共享：在任何媒介以任何形式复制、发行本作品；
+- 演绎：修改、转换或以本作品为基础进行创作。
 
-三、其他
---------
-1. 在学术写作中引用本作品的方法论内容时，请按 README 的引用格式署名。
-2. 商业合作与授权咨询：联系 乔淼PhD（微信公众号「乔淼PhD」）。
-3. 本仓库自 2026-07-04 起适用本协议。本协议不追溯约束此前依据当时许可
-   合法获得的历史版本副本。
+惟须遵守下列条件：
+- 署名：注明出自「乔淼PhD · AI学术训练营」，附上本仓库链接，并说明是否作了修改；
+- 非商业性使用：不得将本作品用于商业目的，包括但不限于付费课程、培训、
+  咨询服务、付费社群、SaaS 或其他盈利性产品与服务。
+
+其他说明：
+1. 「乔淼PhD」「AI学术训练营」「POPPER」等名称和标识不在本许可范围内，
+   改编的版本请勿使用这些名称作为自己产品的名称。
+2. 本作品引用的第三方教材与文献（如 Neuman《Social Research Methods》），
+   其版权归原作者和出版方所有，不因本许可而授予任何权利。
+3. 商业使用授权与合作：联系 乔淼PhD（微信公众号「乔淼PhD」）。
 4. 本作品按"现状"提供，不附带任何明示或默示的担保。
-
---------------------------------------------------------------------
-
-English Summary (for reference; the Chinese text above governs):
-
-This repository is proprietary training material for the "AI学术训练营"
-(AI Academic Bootcamp) by Qiao Miao (乔淼PhD). You may view the contents
-and try them for personal, non-commercial learning. Paid bootcamp students
-are granted a full, non-transferable license for personal academic use.
-Redistribution in any form, commercial use (including use in courses,
-training, consulting, or paid services), and removal of attribution are
-prohibited without prior written permission from the author.
-Provided "as is", without warranty of any kind.
+5. 2026-10-19 之前的版本适用当时的「版权所有 · 受限使用」协议；
+   本次起改为 CC BY-NC 4.0。
