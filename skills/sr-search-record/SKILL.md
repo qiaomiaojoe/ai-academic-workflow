@@ -235,9 +235,9 @@ python3 <skill>/scripts/oa_search.py cite -c 文献/检索筛选/检索配置.js
 - **不建金字塔**——`Classic / Key Texts / Supporting-P/X/Y/V` 是 PXYV 那套，综述文章不用。**也不出金字塔分布图与 PXYV 罗盘图。**
 - **只建一个 Collection：`review-<项目名>`**，不下设子集合。
 - **只入 `ai_decision = include` 的文献**——Zotero 里这个集合就等于本综述的纳入集。`unclear` 的留在台账里交人复核，人确认后再手工加进来。
-- **本步不做专门的 PDF 获取**（那是 ③ 的事）。`zotero_add_by_doi` 的 `attach_mode="auto"` 顺手抓到 OA PDF 就抓到，**抓不到不重试、不换渠道、不记账、不报告**。
+- **本步不做专门的 PDF 获取**（那是 ③ 的事）。`zotero_add_item`（旧版 zotero-mcp 叫 `zotero_add_by_doi`）的 `attach_mode="auto"` 顺手抓到 OA PDF 就抓到，**抓不到不重试、不换渠道、不记账、不报告**。
   ⚠️ 已知故障：zotero-mcp 的 `attach_mode="auto"` 在上传失败时**仍会返回「PDF attached」**（`_download_and_attach_pdf` 不检查 `attachment_both` 的返回值直接 `return True`）。**不得把接口提示当作附件已挂的证据**；要报告附件状态就必须用子项接口复查。
-  ⚠️ **禁止用 `zotero_add_from_file` 挂 PDF**——它没有 parent 参数，永远新建父条目，只会造重复题录。
+  ⚠️ **禁止用 `zotero_add_item(source=文件路径)`（旧版 `zotero_add_from_file`）挂 PDF**——它没有 parent 参数，永远新建父条目，只会造重复题录。给已入库条目补 PDF 用 `zotero_attach_file(item_key, file_path=…)`（zotero-mcp 新版才有）。
 - 标签用 `sr-included` + 项目 slug；`extra` 写 `study_id`、`found_via`、`doi`。
 - **Zotero 写入失败不阻塞**：降级为导出 RIS / BibTeX 落 `文献/检索筛选/`，写进降级记录，流程继续。
 - 人之后手工改了 `final_decision`，以台账为准；**不要自作主张改 Zotero 集合成员**。

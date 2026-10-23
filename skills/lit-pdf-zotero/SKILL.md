@@ -35,7 +35,7 @@ description: 文献 PDF 获取 + Zotero 入库 + 可视化（乔淼PhD · AI学�
 
 Collection 结构：只建一个 Collection（名字 = Collection 名），**不建子集合**（不按金字塔层、不按 PXYV 节点分）。层级和节点一律记在标签里，用户在 Zotero 里按标签筛就能分开看。Collection 已存在就直接往里加。
 
-逐条入库：有 DOI → `zotero_add_by_doi(doi, collections=[Collection], tags=[金字塔层, PXYV节点, 项目slug], attach_mode="auto")`；只有 URL/CNKI → `zotero_add_by_url`（或用 `gs-export` / `sd-export` / `wos-export` / `cnki-export` 直接推送）。入库后用 `zotero_update_item` 写 `extra` 字段：
+逐条入库：有 DOI → `zotero_add_item(source=doi, collections=[Collection], tags=[金字塔层, PXYV节点, 项目slug], attach_mode="auto", if_exists="file")`（旧版 zotero-mcp 叫 `zotero_add_by_doi`，没有 `if_exists`）；只有 URL/CNKI → `zotero_add_item(source=url, …)`（旧版 `zotero_add_by_url`）（或用 `gs-export` / `sd-export` / `wos-export` / `cnki-export` 直接推送）。入库后用 `zotero_update_item` 写 `extra` 字段：
 
 ```
 citations: 123
@@ -44,6 +44,8 @@ pxyv_weights: P=0.7, V=0.3
 ```
 
 （pxyv_weights 按"主导维度"生成，单一维度 = 1.0。标签：金字塔层 `tier:classic` / `tier:key` / `tier:supporting`；节点 `pxyv:P` / `pxyv:X` / `pxyv:Y` / `pxyv:V` 可多选；项目 slug。）
+
+**核对 PDF 附件（必做）**：入库后逐条用 `zotero_get_item_children(item_key)` 查有没有 PDF 附件，不能信入库接口回的「attached」——旧版 zotero-mcp（0.3）附件传不上去也回报成功。没有附件、而 Step 3 已落盘本地 PDF → 用 `zotero_attach_file(item_key, file_path=本地 PDF 完整路径)` 补传，再查一次；还没有 → 入库报告「PDF 附件」一栏如实写「PDF 没传上」（本地 PDF 留着）。旧版没有 `zotero_attach_file`：**不要拿 `zotero_add_from_file` 代替**（它会新建一条重复条目），直接写「PDF 没传上」，并提示升级 zotero-mcp。
 
 入库报告：`| # | 标题 | 入库状态 | PDF 附件 | 标签 |` + 统计（总入库 / PDF 已附 / 金字塔分布 / 节点覆盖）。
 

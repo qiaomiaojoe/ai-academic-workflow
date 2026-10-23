@@ -89,7 +89,7 @@ UOW 把批判性分析拆成三层，**每一层都必须答**：
    - 先 `mcp__zotero__zotero_get_item_metadata` 拿 metadata
    - 再 `mcp__zotero__zotero_get_item_fulltext` 拿正文
    - 必要时 `mcp__zotero__zotero_get_pdf_outline` 看结构
-3. **DOI / URL** → 用 `WebFetch` 或 `mcp__zotero__zotero_add_by_doi` 先入库
+3. **DOI / URL** → 用 `WebFetch` 或 `mcp__zotero__zotero_add_item(source=DOI 或 URL)`（旧版 zotero-mcp 叫 `zotero_add_by_doi` / `zotero_add_by_url`）先入库
 4. **纯文本片段** → 直接基于上下文工作，但在输出中标注"仅基于用户提供的片段"
 
 **信息不足时**：用 `AskUserQuestion` 问用户，**不要编造**作者、年份、页码、引文。

@@ -61,7 +61,7 @@ PDF 落 `文献/PDF/`（命名 `AuthorYear.pdf`）。回写台账两列：
 
 **登录页 / 付费墙 HTML 不得当成 PDF 落盘**（校验文件头与页数），误抓的移进 `文献/PDF/_invalid/`。
 
-**已知故障（不要踩）**：`zotero_add_from_file` 没有 parent 参数，永远新建父条目——**禁止用它给已入库条目挂 PDF**；zotero-mcp 的 `attach_mode="auto"` 上传失败时仍返回「PDF attached」，**要报告附件状态必须用子项接口复查**；`scansci_pdf_zotero_push` 需要 scansci-pdf 的 MCP env 里配 `ZOTERO_API_KEY`，没配就直接失败——失败不阻塞，PDF 留在本地即可。
+**已知故障（不要踩）**：`zotero_add_item(source=文件路径)`（旧版 zotero-mcp 叫 `zotero_add_from_file`）没有 parent 参数，永远新建父条目——**禁止用它给已入库条目挂 PDF**，给已入库条目挂 PDF 用 `zotero_attach_file(item_key, file_path=…)`（新版才有）；zotero-mcp 的 `attach_mode="auto"` 上传失败时仍返回「PDF attached」，**要报告附件状态必须用子项接口复查**；`scansci_pdf_zotero_push` 需要 scansci-pdf 的 MCP env 里配 `ZOTERO_API_KEY`，没配就直接失败——失败不阻塞，PDF 留在本地即可。
 
 跑完报一行：**全文获取率 X / N**，并把这个数回写 `选择流程.md` 里留空的「全文获取率」栏。获取率低不是失败，是要写进局限的事实。
 
