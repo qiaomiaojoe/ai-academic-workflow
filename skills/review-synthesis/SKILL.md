@@ -59,6 +59,8 @@ PDF 落 `文献/PDF/`（命名 `AuthorYear.pdf`）。回写台账两列：
 - `pdf_status` ∈ `oa` / `retrieved` / `not-retrieved`
 - **`evidence_level` ∈ `fulltext` / `abstract`** ← 这一列是本 skill 后面所有标注的依据
 
+已经有 MinerU 文字稿（`文献/全文/<同名>.md`）的那篇算拿到全文：`pdf_status` 照实写，`evidence_level = fulltext`。
+
 **登录页 / 付费墙 HTML 不得当成 PDF 落盘**（校验文件头与页数），误抓的移进 `文献/PDF/_invalid/`。
 
 **已知故障（不要踩）**：`zotero_add_item(source=文件路径)`（旧版 zotero-mcp 叫 `zotero_add_from_file`）没有 parent 参数，永远新建父条目——**禁止用它给已入库条目挂 PDF**，给已入库条目挂 PDF 用 `zotero_attach_file(item_key, file_path=…)`（新版才有）；zotero-mcp 的 `attach_mode="auto"` 上传失败时仍返回「PDF attached」，**要报告附件状态必须用子项接口复查**；`scansci_pdf_zotero_push` 需要 scansci-pdf 的 MCP env 里配 `ZOTERO_API_KEY`，没配就直接失败——失败不阻塞，PDF 留在本地即可。
@@ -67,7 +69,7 @@ PDF 落 `文献/PDF/`（命名 `AuthorYear.pdf`）。回写台账两列：
 
 ## Step 1 · 数据抽取（三型共用，map-reduce 逐篇）
 
-**一篇一行**，逐篇读全文填抽取表 `数据/综合-抽取表.csv`。**逐篇处理是为了防爆上下文，不是汇报节奏——不要每篇停下汇报。**
+**一篇一行**，逐篇读全文填抽取表 `数据/综合-抽取表.csv`。**读全文先找转好的文字稿**：项目里有 `文献/全文/<和 PDF 同名>.md`（POPPER 的 MinerU 工具把 PDF 转成的文字稿，第一行是 `<!-- POPPER · MinerU：源文件 … -->`）就读它、不再读 PDF：每页开头有一行 `<!-- 第 N 页 -->`（N 是 PDF 的第 N 页），页面上印的页码不一样时写成 `<!-- 第 N 页 · 印的页码 X -->`（书的章节、期刊连续编页）：引用页码写 X，没写印的页码就写 N；表格按文字稿里的表格读。没有这个文件，照旧读 PDF。**逐篇处理是为了防爆上下文，不是汇报节奏——不要每篇停下汇报。**
 
 共用字段：`study_id, 作者年份, evidence_level, 国家/情境, 设计, 样本(n 与构成), 抽样, 数据收集, 关键构念与操作化, 主要结果, 页码/表号, 局限, 资助/利益冲突`
 

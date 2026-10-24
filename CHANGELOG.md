@@ -4,6 +4,10 @@ AI学术工作流 skills（乔淼PhD · AI学术训练营）。整个仓库一�
 
 版本号怎么升：改措辞、修毛病 → 第三位（1.1.0 → 1.1.1）；加 skill、删 skill、改了 skill 的输入或产出文件 → 第二位（1.1.0 → 1.2.0）；整套推倒重来 → 第一位。新的写在最上面。
 
+## 1.1.2（2026-10-24）
+
+- **更多 skill 读全文先找 MinerU 文字稿**：`review-synthesis`（证据综合逐篇读全文；有文字稿的算拿到全文 `evidence_level = fulltext`）、`methods-map`（逐篇扫描方法），以及投稿返修的 7 个 skill（`submission-task-intake`、`manuscript-diagnosis`、`manuscript-revision`、`journal-requirements-check`、`submission-package-preparation`、`review-response-planning`、`review-revision-response`）回原文核对文献时，`文献/全文/<同名>.md` 有就读它，页码按 `<!-- 第 N 页 -->`（有印的页码用印的）。
+
 ## 1.1.1（2026-10-24）
 
 - **读全文先找 MinerU 转好的文字稿**：POPPER 内容 1.2.3 起「读文献」里有 MinerU 工具，能把 PDF（包括扫描版、带回归表的）转成 `文献/全文/<和 PDF 同名>.md`，每页开头标 `<!-- 第 N 页 -->`（页面上印的页码不一样时标成 `<!-- 第 N 页 · 印的页码 X -->`，引用写印的页码）。`knowledge-module-gen`、`critical-paper-reading`、`model-paper-deconstruct`、`review-draft`、`review-draft-assembly` 读一篇的全文时，有这个文件就读它（页码按标记），没有照旧读 PDF；`academic-project-init` 的「文件放哪」表加了 `文献/全文/` 一行。没装 MinerU 的不受影响。
