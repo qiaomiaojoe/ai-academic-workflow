@@ -84,7 +84,8 @@ UOW 把批判性分析拆成三层，**每一层都必须答**：
 
 技能被触发时，按以下顺序处理输入：
 
-1. **PDF 文件路径** → 用 `Read` 工具直接读（支持 PDF；超过 10 页时用 `pages` 参数分段）
+1. **PDF 文件路径** → 先看项目里有没有 MinerU 转好的文字稿（下面这条）；没有就用 `Read` 工具直接读 PDF（超过 10 页时用 `pages` 参数分段）
+   - **读全文先找转好的文字稿**：项目里有 `文献/全文/<和 PDF 同名>.md`（POPPER 的 MinerU 工具把 PDF 转成的文字稿，第一行是 `<!-- POPPER · MinerU：源文件 … -->`）就读它、不再读 PDF：每页开头有一行 `<!-- 第 N 页 -->`，那一页的内容引用时页码就写 N（和直接读 PDF 第 N 页一样算）；表格按文字稿里的表格读。没有这个文件，照旧读 PDF。
 2. **Zotero item / citation key**：
    - 先 `mcp__zotero__zotero_get_item_metadata` 拿 metadata
    - 再 `mcp__zotero__zotero_get_item_fulltext` 拿正文
