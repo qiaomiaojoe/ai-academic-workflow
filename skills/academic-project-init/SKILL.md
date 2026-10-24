@@ -69,7 +69,7 @@ description: AI 学术研究项目初始化（乔淼PhD · AI学术训练营 · 
 | 投稿与返修 | submission-task-intake +（manuscript-diagnosis → manuscript-revision → journal-requirements-check → submission-package-preparation；返修：review-response-planning → review-revision-response → 再回期刊要求核对、投稿包） | 写作/（全文初稿或你自己的稿件）、写作/投稿/ | 写作/投稿/（-R<n> 轮次不覆盖，分析日志.md） |
 | 数据 skill 工坊 | skill-workshop-plan → skill-forge | 方法/ | skill源材料/；skill 成品落 ~/.claude/skills/ 或 ~/.codex/skills/（项目外） |
 
-- 文献全文默认读 文献/PDF/ 下的本地 PDF，也可走 Zotero；`文献/全文/` 里有同名的文字稿（POPPER 的 MinerU 工具转的）就先读它，页码按里面的 `<!-- 第 N 页 -->`。
+- 文献全文默认读 文献/PDF/ 下的本地 PDF，也可走 Zotero；`文献/全文/` 里有同名的文字稿（POPPER 的 MinerU 工具转的）就先读它，页码按里面的 `<!-- 第 N 页 -->` 标记（标了「印的页码」就用印的）。
 - 旧项目（01_选题 / 02_文献 / … 那套）不搬文件，照旧按它自己的命名表；综述文章的老项目在项目说明里约定了 `RV_综述/` 的，照旧按 `RV_综述/`。
 - 综述文章的选题、综合特意不叫 选题.md / 研究发现.md，免得和写论文的产出撞名。
 - 不编造文献；缺失的引用用 [TBD-citation] 占位、缺失信息用 [待补] 占位。

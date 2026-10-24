@@ -10,7 +10,7 @@ description: 拆 Model Paper（乔淼PhD · AI学术训练营 · AI学术工作�
 ## 调用约定（独立运行）
 
 **必填（二选一）**：
-- PDF 路径 → 读取该 PDF 全文后再拆解。**读全文先找转好的文字稿**：项目里有 `文献/全文/<和 PDF 同名>.md`（POPPER 的 MinerU 工具把 PDF 转成的文字稿，第一行是 `<!-- POPPER · MinerU：源文件 … -->`）就读它、不再读 PDF：每页开头有一行 `<!-- 第 N 页 -->`，那一页的内容引用时页码就写 N（和直接读 PDF 第 N 页一样算）；表格按文字稿里的表格读。没有这个文件，照旧读 PDF。
+- PDF 路径 → 读取该 PDF 全文后再拆解。**读全文先找转好的文字稿**：项目里有 `文献/全文/<和 PDF 同名>.md`（POPPER 的 MinerU 工具把 PDF 转成的文字稿，第一行是 `<!-- POPPER · MinerU：源文件 … -->`）就读它、不再读 PDF：每页开头有一行 `<!-- 第 N 页 -->`（N 是 PDF 的第 N 页），页面上印的页码不一样时写成 `<!-- 第 N 页 · 印的页码 X -->`（书的章节、期刊连续编页）：引用页码写 X，没写印的页码就写 N；表格按文字稿里的表格读。没有这个文件，照旧读 PDF。
 - 论文标题 → 调用 Zotero MCP（zotero_search_items / zotero_get_item_fulltext / zotero_semantic_search）在用户 Zotero 文库中检索并提取全文。**若 Zotero 中找不到，明确告知并停止，不要使用网络资料替代。**
 
 文献信息（Author Year · Title · Journal · DOI）：用户给了就用；没给就从论文中提取后补全。

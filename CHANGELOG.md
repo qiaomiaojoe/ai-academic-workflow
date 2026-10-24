@@ -6,7 +6,7 @@ AI学术工作流 skills（乔淼PhD · AI学术训练营）。整个仓库一�
 
 ## 1.1.1（2026-10-24）
 
-- **读全文先找 MinerU 转好的文字稿**：POPPER 内容 1.3.0 起「读文献」里有 MinerU 工具，能把 PDF（包括扫描版、带回归表的）转成 `文献/全文/<和 PDF 同名>.md`，每页开头标 `<!-- 第 N 页 -->`。`knowledge-module-gen`、`critical-paper-reading`、`model-paper-deconstruct`、`review-draft`、`review-draft-assembly` 读一篇的全文时，有这个文件就读它（页码按标记），没有照旧读 PDF；`academic-project-init` 的「文件放哪」表加了 `文献/全文/` 一行。没装 MinerU 的不受影响。
+- **读全文先找 MinerU 转好的文字稿**：POPPER 内容 1.3.0 起「读文献」里有 MinerU 工具，能把 PDF（包括扫描版、带回归表的）转成 `文献/全文/<和 PDF 同名>.md`，每页开头标 `<!-- 第 N 页 -->`（页面上印的页码不一样时标成 `<!-- 第 N 页 · 印的页码 X -->`，引用写印的页码）。`knowledge-module-gen`、`critical-paper-reading`、`model-paper-deconstruct`、`review-draft`、`review-draft-assembly` 读一篇的全文时，有这个文件就读它（页码按标记），没有照旧读 PDF；`academic-project-init` 的「文件放哪」表加了 `文献/全文/` 一行。没装 MinerU 的不受影响。
 
 ## 1.1.0（2026-10-23）
 

@@ -49,7 +49,7 @@ description: 综述初稿组装（乔淼PhD · AI学术训练营 · AI学术工�
 
 ## 【引用核实（对照 Zotero 库 / 文献清单）】
 
-初稿写完后，逐条核对 inline citation：用 zotero_search_items / zotero_get_item_metadata 确认每条引用的 Author/Year 真实存在于集合、拼写与年份无误（Zotero 不可用时对照文献清单/本地 PDF 文件名核对）。要回原文核对引语、页码时，**读全文先找转好的文字稿**：项目里有 `文献/全文/<和 PDF 同名>.md`（POPPER 的 MinerU 工具把 PDF 转成的文字稿，第一行是 `<!-- POPPER · MinerU：源文件 … -->`）就读它、不再读 PDF：每页开头有一行 `<!-- 第 N 页 -->`，那一页的内容引用时页码就写 N（和直接读 PDF 第 N 页一样算）；表格按文字稿里的表格读。没有这个文件，照旧读 PDF。
+初稿写完后，逐条核对 inline citation：用 zotero_search_items / zotero_get_item_metadata 确认每条引用的 Author/Year 真实存在于集合、拼写与年份无误（Zotero 不可用时对照文献清单/本地 PDF 文件名核对）。要回原文核对引语、页码时，**读全文先找转好的文字稿**：项目里有 `文献/全文/<和 PDF 同名>.md`（POPPER 的 MinerU 工具把 PDF 转成的文字稿，第一行是 `<!-- POPPER · MinerU：源文件 … -->`）就读它、不再读 PDF：每页开头有一行 `<!-- 第 N 页 -->`（N 是 PDF 的第 N 页），页面上印的页码不一样时写成 `<!-- 第 N 页 · 印的页码 X -->`（书的章节、期刊连续编页）：引用页码写 X，没写印的页码就写 N；表格按文字稿里的表格读。没有这个文件，照旧读 PDF。
 产出一份独立的「引用核验报告.md」（不进初稿）：每条引用 → 是否在库 → 有无出入。
 未能核实的引用，在初稿顶部"交付说明"里点名。
 
