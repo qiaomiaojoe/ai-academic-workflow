@@ -284,6 +284,24 @@ cp -r ai-academic-workflow/skills/* "${CODEX_HOME:-$HOME/.codex}/skills/"
 
 只想要某几个 skill？拷对应完整目录，并保留其 `references/` 等支持文件。**投稿与审稿的六个业务方法还依赖 `submission-task-intake`，要一起装。**
 
+### 依赖与降级（装了哪些外部工具，效果才完整）
+
+本库只放方法。检索数据库、下载 PDF、读写 Zotero、转 Word 用的是下面这些**不在本库里**的工具，要另装。都没装时每个 skill 照样能跑，只是按下表降级，而且会在结果里说明哪一步降级了，**不会编造检索结果或文献**。用 POPPER · AI学术工作站的学员，在「AI学术环境配置」里逐项点安装即可。
+
+| 外部工具 | 从哪装 | 用到它的 skill | 没装时会怎样 |
+|---|---|---|---|
+| 数据库检索 skills：`cnki-*`（中国知网）、`wos-*`（Web of Science）、`sd-*`（ScienceDirect）、`gs-*`（Google Scholar） | [cookjohn/cnki-skills](https://github.com/cookjohn/cnki-skills)、[wos-skills](https://github.com/cookjohn/wos-skills)、[sd-skills](https://github.com/cookjohn/sd-skills)、[gs-skills](https://github.com/cookjohn/gs-skills)；要配 Chrome DevTools MCP，在浏览器里登录（知网下载、WoS 和 ScienceDirect 要用机构账号） | `pxyv-search`、`lit-verify`、`lit-pdf-zotero` | `pxyv-search` 跳过没装的库并告诉你，一个都没有时只给各维度检索词，由你手动去搜；`lit-verify` 改走 doi.org / Crossref / OpenAlex，还查不了的给每条的手动核查链接，不凭印象判真假；中文条目没有知网 skill 就没法自动核对 |
+| scansci-pdf（PDF 下载 MCP 服务） | [Rimagination/scansci-pdf](https://github.com/Rimagination/scansci-pdf)，要 Python 3.11 以上 | `review-synthesis`、`skill-workshop-plan`，以及 `lit-pdf-zotero` 的下载渠道 | 只从开放获取渠道找全文；`review-synthesis` 拿不到全文的研究按「仅摘要」降级表述，**不会因此把它踢出纳入集**；`skill-workshop-plan` 给手动获取方式 |
+| Zotero 服务（zotero-mcp） | [54yyyu/zotero-mcp](https://github.com/54yyyu/zotero-mcp)，服务名要叫 `zotero`；本地模式只能读，要入库还得配 Zotero 网页版的 API key | `lit-pdf-zotero`、`sr-search-record`、`knowledge-module-list`、`knowledge-module-gen`、`critical-paper-reading`、`model-paper-deconstruct`、`review-synthesis`、`review-draft`、`review-draft-assembly` | `lit-pdf-zotero` 只落盘 PDF 和 `文献清单.md`，告诉你怎么手动导入；`sr-search-record` 改导出 RIS / BibTeX；文献分析类改读本地 PDF 或文献清单；引用核验改对照文献清单 |
+| OpenAlex API key（免费）+ Python 3 | [openalex.org](https://openalex.org/) 申请；写进环境变量 `OPENALEX_API_KEY` 或文件 `~/.config/openalex/api_key` | `sr-search-record`（自带脚本 `scripts/oa_search.py`） | 没有 key 只抓得到每个检索式的第一页（100 条），照样往下走，写进 `降级记录.md`，PRISMA 数字标「待有 key 后完整抓取」；没有 Python 3 脚本跑不了 |
+| pandoc | [pandoc.org](https://pandoc.org/installing.html) | `review-draft`、`review-draft-assembly`（转 .docx） | skill 里没写替代办法：只拿得到 .md 初稿，.docx 等装好后再转 |
+| skill-creator | Claude Code 用官方的 `skill-creator` skill；Codex 用自带的 skill-creator（`init_skill.py`） | `skill-forge` | skill 里没写替代办法，造 skill 那一步做不了 |
+| MinerU 文字稿（可选） | POPPER「读文献」里的 MinerU 工具，把 PDF 转成 `文献/全文/<同名>.md` | 读全文的 skill（`knowledge-module-gen`、`critical-paper-reading`、`model-paper-deconstruct`、`review-synthesis`、`methods-map`、投稿与审稿 7 个等） | 直接读 PDF |
+
+装好后可以先用一句话试试工具通没通，比如「用 cnki-search 搜一下『数字劳动』，只列前 3 条」「用 zotero 服务列出我的文献集合」。
+
+维护者：`python3 scripts/validate_skills.py` 会列出各 skill 引用了哪些本库没有的 skill。新增依赖时同步更新这张表和脚本里的 `EXTERNAL_SKILL_PREFIXES`。
+
 ### 触发例句（装好后直接说）
 
 - "帮我选题，我想研究……" → `topic-workbench` 分诊 → 对应选题模式
