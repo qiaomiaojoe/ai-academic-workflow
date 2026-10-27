@@ -1,6 +1,6 @@
 ---
 name: critical-paper-reading
-description: 单篇论文批判性阅读（乔淼PhD · AI学术训练营 · AI学术工作流 · 文献分析步骤）。基于 UOW (University of Wollongong) Critical Analysis 框架 —— 三层升级 (Description → Analysis → Evaluation) + 四维 interrogation (Content / Authorship / Currency & Quality / Critical Writing Language)，把一篇论文（PDF / Zotero item）拆成结构化的批判性阅读笔记，每条 claim 锚定页码、绝不编造。可独立运行，输入一个 PDF 路径或 Zotero item 即可。Trigger on: "critically read this paper", "critique this paper", "批判性阅读", "帮我批注这篇 paper", "读一下这篇 paper", "deconstruct this paper", "analyze this article critically", "评一下这篇文章".
+description: 单篇论文批判性阅读（乔淼PhD · AI学术训练营 · AI学术工作流 · 文献分析步骤）。基于 UOW (University of Wollongong) Critical Analysis 框架 —— 三层升级 (Description → Analysis → Evaluation) + 四维 interrogation (Content / Authorship / Currency & Quality / Critical Writing Language)，把一篇论文（PDF / Zotero item）拆成结构化的批判性阅读笔记，每条 claim 锚定页码、绝不编造。可独立运行，输入一个 PDF 路径或 Zotero item 即可。Trigger on："critically read this paper", "critique this paper", "批判性阅读", "帮我批注这篇 paper", "读一下这篇 paper", "deconstruct this paper", "analyze this article critically", "评一下这篇文章".
 ---
 
 # Critical Paper Reading · UOW 框架

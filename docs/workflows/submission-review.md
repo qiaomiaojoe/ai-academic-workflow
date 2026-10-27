@@ -8,7 +8,7 @@
 
 2026-10-16 改成全局可装（和本库其他 skill 一样装进全局 skills 文件夹），落盘统一到论文项目的 `写作/投稿/`；方法本体不改，版本各加一位：
 
-| Skill | 方法版本 | 原场景 |
+| Skill | 方法版本 | 旧工作台编号 |
 |-------|----------|--------|
 | `submission-task-intake` | 1.1.0 | s01 共用前置，随 s02–s07 使用 |
 | `manuscript-diagnosis` | 1.2.0 | s02 初稿诊断 |
@@ -18,7 +18,7 @@
 | `review-response-planning` | 1.1.0 | s06 审稿意见与回应决策 |
 | `review-revision-response` | 1.1.0 | s07 返修改稿与逐条回复 |
 
-原场景编号保留在方法正文中，方便已有工作台继续调用。`manuscript-diagnosis` 保留 Stenius et al. (2017, pp.159–161) 质性三标准及适用边界。
+2026-10-27 起方法正文改用 skill 名互相指代（原来写的是 s01–s07）；旧编号只在每个 SKILL.md 开头的「工作流位置」里留一处对照，老工作台按编号调用仍能对上。`manuscript-diagnosis` 保留 Stenius et al. (2017, pp.159–161) 质性三标准及适用边界。
 
 ## 安装
 
