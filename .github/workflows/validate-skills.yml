@@ -1,0 +1,25 @@
+# skill 库体检：每次推送和 PR 都跑 scripts/validate_skills.py（说明见脚本开头）
+name: 体检 skills
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      # 装 PyYAML 让 frontmatter 按严格 YAML 解析（和 Codex 一样严）
+      - run: python -m pip install --quiet pyyaml
+      - run: python scripts/validate_skills.py
+      - name: 自带脚本能运行
+        run: python skills/sr-search-record/scripts/oa_search.py --help
