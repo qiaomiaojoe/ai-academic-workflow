@@ -45,9 +45,18 @@ pxyv_weights: P=0.7, V=0.3
 
 （pxyv_weights 按"主导维度"生成，单一维度 = 1.0。标签：金字塔层 `tier:classic` / `tier:key` / `tier:supporting`；节点 `pxyv:P` / `pxyv:X` / `pxyv:Y` / `pxyv:V` 可多选；项目 slug。）
 
-**核对 PDF 附件（必做）**：入库后逐条用 `zotero_get_item_children(item_key)` 查有没有 PDF 附件，不能信入库接口回的「attached」——旧版 zotero-mcp（0.3）附件传不上去也回报成功。没有附件、而 Step 3 已落盘本地 PDF → 用 `zotero_attach_file(item_key, file_path=本地 PDF 完整路径)` 补传，再查一次；还没有 → 入库报告「PDF 附件」一栏如实写「PDF 没传上」（本地 PDF 留着）。旧版没有 `zotero_attach_file`：**不要拿 `zotero_add_from_file` 代替**（它会新建一条重复条目），直接写「PDF 没传上」，并提示升级 zotero-mcp。
+**核对 PDF 附件（必做，三查）**：不能信入库接口回的「attached」——zotero-mcp 附件传不上去也会回报成功，还会留下**一条有记录、没文件的空附件**（用户在 Zotero 里一点就报「找不到文件」）。所以入库后逐条：
+1. **有没有记录**：`zotero_get_item_children(item_key)` 看下面有没有 PDF 附件。
+2. **文件在不在**：`zotero_get_attachment_path(item_key)` 取附件路径，确认本机这个文件真的存在（读不了本机文件的环境，报告里写「只确认了附件记录，没确认文件」，不写「已附」）。
+3. **是不是这篇**：读附件 PDF 第一页（或 `zotero_get_item_fulltext`），标题、第一作者和条目对得上才算数。`attach_mode="auto"` 自动抓的 PDF 可能抓错（比如抓成同主题的另一篇综述）。
 
-入库报告：`| # | 标题 | 入库状态 | PDF 附件 | 标签 |` + 统计（总入库 / PDF 已附 / 金字塔分布 / 节点覆盖）。
+查出问题的处理（写死，不要自己发明办法）：
+- **空附件或抓错的**：用 `zotero_delete_item(附件 key)` 删掉**这条附件**（Zotero 里删的进回收站，能找回；删前在报告里列出要删的附件和原因）。**不要**改名留着、**不要**另建一条独立附件、**不要**去改 Zotero 的 storage 文件夹。
+- 删完，Step 3 有对的本地 PDF → `zotero_attach_file(item_key, file_path=本地 PDF 完整路径)` 重挂，再按上面三查一遍；没有对的 PDF → 报告写「抓错已删 / PDF 没传上」，本地 PDF（如果有）留着。
+- 旧版没有 `zotero_attach_file`：**不要拿 `zotero_add_from_file` 代替**（它会新建一条重复条目），直接写「PDF 没传上」，并提示升级 zotero-mcp。
+- 空附件不止一两条时，多半是 Zotero 网盘存储满了（免费 300 MB）或上传失败：报告末尾提醒用户看一下 Zotero「设置 → 同步 → 文件同步」；PDF 本地都在 PDF 文件夹里，不影响后面读文献。
+
+入库报告：`| # | 标题 | 入库状态 | PDF 附件 | 标签 |`，「PDF 附件」只写这四种之一：已附（三查都过）/ 只有记录、没确认文件 / 抓错已删 / 没有 PDF；+ 统计（总入库 / PDF 已附 / 金字塔分布 / 节点覆盖 / 语言分布）。
 
 可视化（单文件 HTML，纯 HTML+CSS+内联 SVG 无外部库；浅色背景 #FAF7F2，amber #B8834A）：
 - **图 1 文献金字塔分布图**：三层水平堆叠，顶 Classic（窄，标篇名+作者）→ 中 Key（标标题+主要节点）→ 底 Supporting（按数量宽度）；Classic #E65100 / Key #1565C0 / Supporting #558B2F。
