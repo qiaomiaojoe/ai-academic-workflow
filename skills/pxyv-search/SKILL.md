@@ -23,9 +23,9 @@ description: PXYV 四维度文献检索（乔淼PhD · AI学术训练营 · AI�
 | Google Scholar | 中英 | `gs-advanced-search` / `gs-search`；`gs-cited-by` 引文滚雪球 |
 | ScienceDirect | 英 | `sd-advanced-search` / `sd-search`；`sd-paper-detail` 取元数据 |
 | Web of Science | 英 | `wos-search`（可按数据库/版本过滤）；`wos-paper-detail` 取元数据+影响因子 |
-| 知网 CNKI | 中 | `cnki-advanced-search` 按来源类别（SCI/CSSCI/北大核心）检索；`cnki-parse-results` 提取结果 |
+| 知网 CNKI | 中 | `cnki` skill 的 `search`：`--field` 选字段，`--core` 限 CSSCI / 北大核心 等，`--years` 限年份，回结构化结果 |
 
-CNKI 固定参数：文献类型仅"学术期刊"（严禁学位论文/会议/报纸/年鉴）；来源类别建议 CSSCI / 北大核心 / SCI；每次搜完调用 `cnki-parse-results` 提取结构化结果。
+CNKI 固定参数：文献类型仅"学术期刊"（`--type 期刊`，严禁学位论文/会议/报纸/年鉴）；来源类别建议 `--core CSSCI,北大核心`；`--size 50` 一次多取，少翻页（知网查得太密会拦）。`cnki` 回的 status 不是 `ok` / `not_found` 时，按它的说明处理，这一库标「没搜成」并告诉用户，不拿别的库的结果冒充知网。
 
 ## 检索策略
 

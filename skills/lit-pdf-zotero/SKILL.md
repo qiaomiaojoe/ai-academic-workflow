@@ -20,7 +20,7 @@ description: 文献 PDF 获取 + Zotero 入库 + 可视化（乔淼PhD · AI学�
 
 ## Step 2 · 补全引用数
 
-英文用 OpenAlex API（`https://api.openalex.org/works/doi:{DOI}` 取 `cited_by_count`）或 Google Scholar；中文用 `cnki-paper-detail`。清单里已有的不重采。
+英文用 OpenAlex API（`https://api.openalex.org/works/doi:{DOI}` 取 `cited_by_count`）或 Google Scholar；中文用 `cnki` skill 的 `verify` 或 `detail`（取 `cited`）。清单里已有的不重采。
 
 ## Step 3 · 查找 PDF 并落盘
 
@@ -35,7 +35,7 @@ description: 文献 PDF 获取 + Zotero 入库 + 可视化（乔淼PhD · AI学�
 
 Collection 结构：只建一个 Collection（名字 = Collection 名），**不建子集合**（不按金字塔层、不按 PXYV 节点分）。层级和节点一律记在标签里，用户在 Zotero 里按标签筛就能分开看。Collection 已存在就直接往里加。
 
-逐条入库：有 DOI → `zotero_add_item(source=doi, collections=[Collection], tags=[金字塔层, PXYV节点, 项目slug], attach_mode="auto", if_exists="file")`（旧版 zotero-mcp 叫 `zotero_add_by_doi`，没有 `if_exists`）；只有 URL/CNKI → `zotero_add_item(source=url, …)`（旧版 `zotero_add_by_url`）（或用 `gs-export` / `sd-export` / `wos-export` / `cnki-export` 直接推送）。入库后用 `zotero_update_item` 写 `extra` 字段：
+逐条入库：有 DOI → `zotero_add_item(source=doi, collections=[Collection], tags=[金字塔层, PXYV节点, 项目slug], attach_mode="auto", if_exists="file")`（旧版 zotero-mcp 叫 `zotero_add_by_doi`，没有 `if_exists`）；只有 URL/CNKI → `zotero_add_item(source=url, …)`（旧版 `zotero_add_by_url`）（或用 `gs-export` / `sd-export` / `wos-export` 直接推送；中文没有 DOI 的，可用 `cnki` skill 的 `export <条目编号> --to zotero` 导进 Zotero 当前选中的分类，再用 `zotero_set_item_collections` 放进 Collection）。入库后用 `zotero_update_item` 写 `extra` 字段：
 
 ```
 citations: 123
