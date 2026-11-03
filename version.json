@@ -1,6 +1,6 @@
 {
-  "version": "1.2.0",
-  "date": "2026-11-02",
+  "version": "1.2.1",
+  "date": "2026-11-03",
   "skills": [
     "academic-project-init",
     "analyze-qualitative-data",
@@ -11,6 +11,7 @@
     "data-analysis-round",
     "findings-synthesis",
     "fulltext-draft",
+    "journal-rank",
     "journal-requirements-check",
     "knowledge-module-gen",
     "knowledge-module-list",
