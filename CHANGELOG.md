@@ -4,6 +4,13 @@ AI学术工作流 skills（乔淼PhD · AI学术训练营）。整个仓库一�
 
 版本号怎么升：改措辞、修毛病 → 第三位（1.1.0 → 1.1.1）；加 skill、删 skill、改了 skill 的输入或产出文件 → 第二位（1.1.0 → 1.2.0）；整套推倒重来 → 第一位。新的写在最上面。
 
+## 1.3.0（2026-11-05）
+
+（改了 skill 读的文件位置，按规矩升第二位。配合 POPPER 内容 1.5.1。）
+
+- **MinerU 文字稿换地方**：POPPER 的 MinerU 工具从内容 1.5.1 起，把文字稿放在 PDF 所在文件夹下的 `MinerU文字稿/` 里，和 PDF 同名。比如 `文献/PDF/Smith2020.pdf` 的文字稿在 `文献/PDF/MinerU文字稿/Smith2020.md`。以前统一放 `文献/全文/`，那里已经转好的照旧认。
+- 读全文先找文字稿的 15 个 skill 都改成先找新位置、再找旧位置：`knowledge-module-gen`、`critical-paper-reading`、`model-paper-deconstruct`、`review-synthesis`、`review-draft`、`review-draft-assembly`、`methods-map`、投稿与审稿 7 个，还有 `academic-project-init` 的「文件放哪」表。README 依赖表同步改。
+
 ## 1.2.1（2026-11-03）
 
 （加了 skill，按规矩该升第二位；乔淼 11-03 定：这一轮检索 skill 重做都留在 1.2.x。）

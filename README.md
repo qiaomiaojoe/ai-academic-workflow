@@ -299,7 +299,7 @@ cp -r ai-academic-workflow/skills/* "${CODEX_HOME:-$HOME/.codex}/skills/"
 | OpenAlex API key（免费）+ Python 3 | [openalex.org](https://openalex.org/) 申请；写进环境变量 `OPENALEX_API_KEY` 或文件 `~/.config/openalex/api_key` | `sr-search-record`（自带脚本 `scripts/oa_search.py`） | 没有 key 只抓得到每个检索式的第一页（100 条），照样往下走，写进 `降级记录.md`，PRISMA 数字标「待有 key 后完整抓取」；没有 Python 3 脚本跑不了 |
 | pandoc | [pandoc.org](https://pandoc.org/installing.html) | `review-draft`、`review-draft-assembly`（转 .docx） | skill 里没写替代办法：只拿得到 .md 初稿，.docx 等装好后再转 |
 | skill-creator | Claude Code 用官方的 `skill-creator` skill；Codex 用自带的 skill-creator（`init_skill.py`） | `skill-forge` | skill 里没写替代办法，造 skill 那一步做不了 |
-| MinerU 文字稿（可选） | POPPER「读文献」里的 MinerU 工具，把 PDF 转成 `文献/全文/<同名>.md` | 读全文的 skill（`knowledge-module-gen`、`critical-paper-reading`、`model-paper-deconstruct`、`review-synthesis`、`methods-map`、投稿与审稿 7 个等） | 直接读 PDF |
+| MinerU 文字稿（可选） | POPPER「读文献」里的 MinerU 工具，把 PDF 转成 PDF 所在文件夹里的 `MinerU文字稿/<同名>.md`（1.3.0 以前是 `文献/全文/<同名>.md`，照旧认） | 读全文的 skill（`knowledge-module-gen`、`critical-paper-reading`、`model-paper-deconstruct`、`review-synthesis`、`methods-map`、投稿与审稿 7 个等） | 直接读 PDF |
 
 装好后可以先用一句话试试工具通没通，比如「用 cnki skill 搜一下『数字劳动』，只列前 3 条」「用 zotero 服务列出我的文献集合」。
 
