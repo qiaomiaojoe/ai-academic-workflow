@@ -43,14 +43,15 @@ OpenAlex 翻页（游标第二页起）要 API key（https://help.openalex.org/a
 """
 
 import argparse
+import base64
 import collections
 import csv
+import http.client
 import json
 import os
 import re
 import sys
 import time
-import urllib.error
 import urllib.parse
 import urllib.request
 
@@ -89,26 +90,76 @@ def _redact(url):
     return re.sub(r"(api_key=)[^&]*", r"\1***", url)
 
 
+# 连接保持打开、多次请求复用（不用 urllib.urlopen）。
+# 原因（2026-11-07 实测）：urllib 每次请求都带「Connection: close」，服务器发完就断开；
+# Claude Code 沙箱的网络代理这时会把还没转给 Python 的数据丢掉，报 IncompleteRead，
+# 重试几次都一样。保持连接就没有这个问题；不在沙箱里时也照常能用。
+_CONNS = {}
+
+
+def _proxy(host):
+    """沿用系统代理设置（HTTPS_PROXY / NO_PROXY；Mac、Windows 没设环境变量时读系统设置）。"""
+    try:
+        if urllib.request.proxy_bypass(host):
+            return None
+        return urllib.request.getproxies().get("https")
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def _conn(host):
+    c = _CONNS.get(host)
+    if c is None:
+        proxy = _proxy(host)
+        if proxy:
+            pu = urllib.parse.urlsplit(proxy if "://" in proxy else "http://" + proxy)
+            c = http.client.HTTPSConnection(pu.hostname, pu.port or 8080, timeout=60)
+            hdr = {}
+            if pu.username:
+                cred = "%s:%s" % (urllib.parse.unquote(pu.username), urllib.parse.unquote(pu.password or ""))
+                hdr["Proxy-Authorization"] = "Basic " + base64.b64encode(cred.encode()).decode()
+            c.set_tunnel(host, 443, headers=hdr)
+        else:
+            c = http.client.HTTPSConnection(host, 443, timeout=60)
+        _CONNS[host] = c
+    return c
+
+
+def _drop(host):
+    c = _CONNS.pop(host, None)
+    if c is not None:
+        c.close()
+
+
 def _get(url, tries=5):
     """指数退避。OpenAlex 限流（429）时不要立刻放弃——限流是常态，不是失败。"""
     last = None
+    u = urllib.parse.urlsplit(url)
+    target = u.path + ("?" + u.query if u.query else "")
     for i in range(tries):
         try:
-            req = urllib.request.Request(url, headers={"User-Agent": UA, "Accept": "application/json"})
-            with urllib.request.urlopen(req, timeout=60) as r:
-                return json.load(r)
-        except urllib.error.HTTPError as e:
-            last = "HTTP %s %s" % (e.code, e.reason)
-            if e.code in (401, 403) and OA_BASE in url:
-                raise AuthError(last)
-            if e.code in (429, 500, 502, 503):
-                wait = min(60, 4 * (2 ** i))
-                sys.stderr.write("[oa_search] %s，%d 秒后重试（第 %d/%d 次）\n" % (last, wait, i + 1, tries))
-                time.sleep(wait)
-                continue
-            break
-        except Exception as e:  # noqa: BLE001
-            last = str(e)
+            c = _conn(u.hostname)
+            c.request("GET", target, headers={"User-Agent": UA, "Accept": "application/json"})
+            r = c.getresponse()
+            body = r.read()
+            if r.will_close:
+                _drop(u.hostname)
+            if r.status >= 400:
+                last = "HTTP %s %s" % (r.status, r.reason)
+                if r.status in (401, 403) and OA_BASE in url:
+                    raise AuthError(last)
+                if r.status in (429, 500, 502, 503):
+                    wait = min(60, 4 * (2 ** i))
+                    sys.stderr.write("[oa_search] %s，%d 秒后重试（第 %d/%d 次）\n" % (last, wait, i + 1, tries))
+                    time.sleep(wait)
+                    continue
+                break
+            return json.loads(body)
+        except AuthError:
+            raise
+        except Exception as e:  # noqa: BLE001  连接断了、读不全、回的不是 JSON：换新连接重试
+            _drop(u.hostname)
+            last = "%s: %s" % (type(e).__name__, e)
             time.sleep(min(30, 3 * (2 ** i)))
     die("请求失败：%s\n  URL: %s\n"
         "  429 持续不退时的降级出路：等 30–60 分钟再跑；或把 filters.publication_year 拆成几段分批抓，\n"
