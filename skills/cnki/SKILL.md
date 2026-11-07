@@ -42,7 +42,7 @@ node <skill>/scripts/cnki.mjs <命令> [参数]
 | `limit` | 这一小时查太多次了 | 同上 |
 | `unreachable` | 国内站和海外版都打不开 | 让用户检查网络 |
 | `layout_changed` | 知网页面改了，脚本取不到字段 | 告诉用户「知网改版了，知网 skill 要更新」，并把 `msg` 原样转给用户 |
-| `no_browser` | 没找到 Chrome 或 Edge | 请用户装 Chrome |
+| `no_browser` | 没找到 Chrome 或 Edge；或浏览器开不起来（Mac 上 AI 在沙箱里跑时就会这样） | 没装就请用户装 Chrome。开不起来：照 msg 原样告诉用户（在 POPPER 里是到「AI学术环境配置 → 大家共用的 → 检索浏览器」点「打开」），等用户说开好了再重试；**不要自己想办法开浏览器、改端口、杀进程** |
 | `error` | 参数错了或其他问题 | 看 `msg` |
 
 `verify` 返回的 `verdict` 只有三种：

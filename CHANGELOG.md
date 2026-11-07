@@ -7,6 +7,7 @@ AI学术工作流 skills（乔淼PhD · AI学术训练营）。整个仓库一�
 ## 1.3.1（2026-11-07）
 
 - **`sr-search-record` 在 Mac 的 AI 沙箱里检索不再断**：以前 `oa_search.py` 用 Python 自带的 urllib 联网，每次请求完就断开连接；POPPER 交给 Claude Code 的任务在沙箱里跑，联网要过沙箱的代理，代理会把还没转完的数据丢掉，报 `IncompleteRead`，重试 5 次都一样，检索跑不起来。现在改成保持连接、多次请求共用一条连接（照旧沿用系统代理设置），OpenAlex 和 Europe PMC 都是。11-07 在沙箱里实测 probe、recall、fetch（754 条翻页）、cite、epmc 都正常。
+- **`cnki`、`journal-rank` 在 AI 沙箱里能用了（配合 POPPER 内容 1.5.2）**：Mac 上 AI 在沙箱里开不起查知网、查期刊用的浏览器（建不了 `~/.cnki-skill/`，Chrome 起来就退），一律回 `no_browser`。现在 POPPER 在沙箱外替它开好，脚本先等两三秒连上就用；查询记录写不了 `~/.cnki-skill` 时改写临时文件夹；实在开不起来，提示用户到 POPPER「AI学术环境配置 → 大家共用的 → 检索浏览器」点「打开」。SKILL.md 里 `no_browser` 的处理改成：照原样告诉用户、等用户开好再试，不要自己开浏览器、改端口、杀进程。自己在终端里跑跟以前一样。
 
 ## 1.3.0（2026-11-05）
 

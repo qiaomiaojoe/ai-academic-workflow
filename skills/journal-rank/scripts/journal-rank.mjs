@@ -20,13 +20,20 @@ import path from 'node:path';
 
 const HOME = path.join(os.homedir(), '.cnki-skill');
 const PROFILE = path.join(HOME, 'browser');
-const STATE = path.join(HOME, 'journal-rank-state.json');
+// 记录（每小时查了几次、上次检索）放 ~/.cnki-skill；写不了（Mac 上 AI 的沙箱里，11-07 实测）就放临时文件夹
+const DATA = (() => {
+  for (const d of [HOME, path.join(os.tmpdir(), 'cnki-skill')]) {
+    try { fs.mkdirSync(d, { recursive: true }); fs.writeFileSync(path.join(d, '.w'), ''); return d; } catch {}
+  }
+  return HOME;
+})();
+const STATE = path.join(DATA, 'journal-rank-state.json');
 const PORT = Number(process.env.CNKI_PORT) || 19333;
 const HOURLY_LIMIT = 120; // 一小时内最多打开的查询页，查得太勤容易被网站限制
 const BASE = 'https://ijournal.topeditsci.com';
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const readJson = (f, d) => { try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch { return d; } };
-const writeJson = (f, v) => { fs.mkdirSync(HOME, { recursive: true }); fs.writeFileSync(f, JSON.stringify(v, null, 1)); };
+const writeJson = (f, v) => { fs.mkdirSync(DATA, { recursive: true }); fs.writeFileSync(f, JSON.stringify(v, null, 1)); };
 class Stop extends Error { constructor(status, msg, extra = {}) { super(msg); Object.assign(this, { status, extra }); } }
 
 // ---------- 浏览器 ----------
@@ -53,16 +60,19 @@ const devtools = (p, method = 'GET') => new Promise((res, rej) => {
   r.on('error', rej); r.setTimeout(3000, () => r.destroy(Error('调试口没响应'))); r.end();
 });
 
+// 沙箱里开不起浏览器（建不了资料文件夹、Chrome 起来就退，11-07 实测）：POPPER 在沙箱外替它开（内容 1.5.2）
+const IN_POPPER = '如果是在 AI学术工作站（POPPER）里让 AI 跑的：AI 的沙箱里开不了浏览器，请到 POPPER 左下角「AI学术环境配置」→「大家共用的」→「检索浏览器」点「打开」，再让 AI 重试（AI 别自己想办法开）。';
 async function ensureBrowser() {
-  try { await devtools('/json/version'); return; } catch {}
+  // POPPER 交任务时可能刚替它开了浏览器，多等两三秒
+  for (let i = 0; i < 6; i++) { try { await devtools('/json/version'); return; } catch {} if (i < 5) await sleep(500); }
   const exe = findBrowser();
   if (!exe) throw new Stop('no_browser', '没找到 Chrome 或 Edge。装一个 Chrome，或者设环境变量 CNKI_BROWSER 指向浏览器程序');
-  fs.mkdirSync(PROFILE, { recursive: true });
+  try { fs.mkdirSync(PROFILE, { recursive: true }); } catch (e) { throw new Stop('no_browser', `建不了浏览器资料文件夹 ${PROFILE}（${e.code || e.message}）。` + IN_POPPER); }
   // 单独一份资料：不碰学员日常浏览器；新版 Chrome 也只许在非默认资料上开调试口
   spawn(exe, [`--user-data-dir=${PROFILE}`, `--remote-debugging-port=${PORT}`, '--no-first-run', '--no-default-browser-check', 'about:blank'],
-    { detached: true, stdio: 'ignore' }).unref();
+    { detached: true, stdio: 'ignore' }).on('error', () => {}).unref();
   for (let i = 0; i < 60; i++) { await sleep(250); try { await devtools('/json/version'); return; } catch {} }
-  throw new Stop('no_browser', `浏览器开了但连不上调试口（端口 ${PORT}）。关掉这个浏览器窗口再试；端口被占用的话设环境变量 CNKI_PORT 换一个`);
+  throw new Stop('no_browser', `浏览器开了但连不上调试口（端口 ${PORT}）。` + IN_POPPER + `自己在终端里跑的：关掉这个浏览器窗口再试；端口被占用的话设环境变量 CNKI_PORT 换一个`);
 }
 
 // 最小的 WebSocket 客户端（Node 22 以前没有自带的）
