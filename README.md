@@ -358,4 +358,4 @@ Approaches (7th ed.). Pearson Education Limited.
 - ❌ 不得用于商业用途（付费课程 / 培训 / 咨询 / 付费社群 / 盈利性产品与服务）
 - 「乔淼PhD」「AI学术训练营」「POPPER」等名称和标识不在许可范围内
 
-配套的桌面软件 **POPPER · AI学术工作站**：[下载](https://github.com/qiaomiaojoe/ai-academic-app)。商业合作与授权咨询：微信公众号「乔淼PhD」。完整条款见 [LICENSE](LICENSE)。
+配套的桌面软件 **POPPER · AI学术工作站**：[前往](https://github.com/qiaomiaojoe/ai-academic-app)。商业合作与授权咨询：微信公众号「乔淼PhD」。完整条款见 [LICENSE](LICENSE)。
