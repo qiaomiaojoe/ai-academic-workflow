@@ -1,6 +1,6 @@
 ---
 name: pxyv-search
-description: PXYV 四维度文献检索（乔淼PhD · AI学术训练营 · AI学术工作流）。按 P 理论 / X 现象 / Y 语境 / V 近邻四个维度设计检索式并在可用检索工具（Web Search / Google Scholar / ScienceDirect / WoS / CNKI）里执行，中英双语策略，输出候选文献清单表。只做检索，不验真不分层——验真用 lit-verify，分层用 lit-pyramid。Trigger on："按 PXYV 四维帮我检索文献"、"四维度文献检索"、"给这个选题设计检索式并搜一轮"、"run a PXYV four-dimension literature search"。
+description: PXYV 四维度文献检索（乔淼PhD · AI学术训练营 · AI学术工作流）。按 P 理论 / X 现象 / Y 语境 / V 近邻四个维度设计检索式并在可用检索工具（Google Scholar / OpenAlex / CNKI / Web Search）里执行，可按期刊级别（SSCI / JCR 分区等）筛，中英双语策略，输出候选文献清单表。只做检索，不验真不分层——验真用 lit-verify，分层用 lit-pyramid。Trigger on："按 PXYV 四维帮我检索文献"、"四维度文献检索"、"给这个选题设计检索式并搜一轮"、"run a PXYV four-dimension literature search"。
 ---
 
 # PXYV Search · 四维度文献检索
@@ -10,7 +10,7 @@ description: PXYV 四维度文献检索（乔淼PhD · AI学术训练营 · AI�
 ## 调用约定（独立运行）
 
 - 输入优先级：用户直接给的 PXYV / 关键词清单 > `选题.md`（锚块 + 5 近邻，为权威依据）> 用户只给一句话选题 → 先调 `topic-pxyv-parse` 拆四维，用户确认后再搜。
-- 参数（均有默认，用户可覆盖）：每维候选条数（默认 8-10 条）；发表年限（默认近 5 年，Classic/奠基文献放宽到 1990）；文献语言（默认跟随选题语言，可指定纯中/纯英/双语）；额外检索要求（优先级最高）。
+- 参数（均有默认，用户可覆盖）：每维候选条数（默认 8-10 条）；发表年限（默认近 5 年，Classic/奠基文献放宽到 1990）；文献语言（默认跟随选题语言，可指定纯中/纯英/双语）；期刊级别要求（默认不筛；用户说了才筛，比如「只要 SSCI」「JCR Q1–Q2」）；额外检索要求（优先级最高）。
 - 输出：会话内候选清单表；可追加落盘 `检索候选.md`（默认当前工作目录）。
 - 工具适配：只用环境实际可用的检索工具，缺对应 skill 时跳过并告知；**没有任何可用工具时，输出各维度检索词清单给用户手动执行，不编造结果**。
 - **调用方覆盖约定**：调用方（工作台 prompt / 用户）显式给出的参数、输入路径、落盘路径与工具选择，一律覆盖本 skill 的默认；但本 skill 的方法步骤、硬约束与停点不可被省略或稀释——调用方若要求跳过某硬约束，以本 skill 为准并提示冲突。
@@ -20,12 +20,22 @@ description: PXYV 四维度文献检索（乔淼PhD · AI学术训练营 · AI�
 | 工具 | 语言 | 调用方式 |
 |------|------|---------|
 | 自带 Web Search | 中英 | 环境内置联网搜索检索学术来源（Google Scholar / Semantic Scholar / OpenAlex / Crossref / 出版商页） |
-| Google Scholar | 中英 | `gs-advanced-search` / `gs-search`；`gs-cited-by` 引文滚雪球 |
-| ScienceDirect | 英 | `sd-advanced-search` / `sd-search`；`sd-paper-detail` 取元数据 |
-| Web of Science | 英 | `wos-search`（可按数据库/版本过滤）；`wos-paper-detail` 取元数据+影响因子 |
+| Google Scholar | 中英（英文主力） | `scholar` skill 的 `search`（`--author` / `--journal` / `--years` / `--title-only` / `--exact`）；`cited-by` 引文滚雪球 |
+| OpenAlex | 英（兜底） | `openalex` skill 的 `search`（带摘要，付费文章多半没有）；`cited-by` / `refs` 引用链；`verify` 补完整刊名、作者、DOI |
 | 知网 CNKI | 中 | `cnki` skill 的 `search`：`--field` 选字段，`--core` 限 CSSCI / 北大核心 等，`--years` 限年份，回结构化结果 |
 
 CNKI 固定参数：文献类型仅"学术期刊"（`--type 期刊`，严禁学位论文/会议/报纸/年鉴）；来源类别建议 `--core CSSCI,北大核心`；`--size 50` 一次多取，少翻页（知网查得太密会拦）。`cnki` 回的 status 不是 `ok` / `not_found` 时，按它的说明处理，这一库标「没搜成」并告诉用户，不拿别的库的结果冒充知网。
+
+Google Scholar 回 `unreachable` / `blocked` / `limit` / `captcha`（等完仍没点）时，这一库标「没搜成」并告诉用户，英文检索改用 `openalex` 的 `search`，报告里写明。`--size 20` 一次多取，少翻页（谷歌比知网更容易拦）。
+
+**不能搜 Web of Science、Scopus**（要学校订阅）。谷歌学术和 OpenAlex 的结果**不等于这两个库的检索结果**，不要写成「检索了 WoS / Scopus」。
+
+## 按期刊级别筛（用户要求时）
+
+1. 谷歌学术的刊名常被截断（以 `…` 结尾）：先用 `openalex` 的 `verify --file` 补全完整刊名和 DOI；
+2. 刊名去重后，用 `journal-rank` 的 `lookup` 查（一次传几本，有 ISSN 用 ISSN），结果填进候选表的「期刊层级」列；
+3. 按用户要的级别筛掉其余的。查不到的（中文刊、`journal-rank` 没收的）单列出来问用户，不当成不合格；
+4. 报告写明：「检索来源：谷歌学术 / OpenAlex；按 iJournal 的期刊收录和分区筛选（查询日期）。不等于 Web of Science / Scopus 检索结果。」
 
 ## 检索策略
 
@@ -43,7 +53,7 @@ CNKI 固定参数：文献类型仅"学术期刊"（`--type 期刊`，严禁学�
 - P 维度：core construct 的 seminal 文献 + 近 5 年应用；检索式 = "P 术语" AND (theory OR framework OR model)
 - X 维度：现象的实证研究；检索式 = "X 现象词" AND (empirical OR evidence OR effect OR study) AND 方法/数据词
 - Y 维度：语境/背景文献（可含政策报告、行业数据）；检索式 = "X 现象词" AND 语境词（国家 / 地区 / 人群 / 行业）
-- V 维度：需显式区分的近邻文献（**必须找到**）；用近邻标题关键词反查 + 沿 cited-by / citing 链滚雪球（`gs-cited-by`）
+- V 维度：需显式区分的近邻文献（**必须找到**）；用近邻标题关键词反查 + 沿 cited-by / citing 链滚雪球（`scholar` 的 `cited-by`，或 `openalex` 的 `cited-by` / `refs`）
 
 ## 输出
 

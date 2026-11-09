@@ -1,6 +1,6 @@
 # AI学术工作流 · 「AI学术训练营」skills 库（乔淼PhD）
 
-> 「**AI学术训练营**」（乔淼PhD）配套的 **AI学术工作流** skills 库，按 **期刊初稿**、**综述文章**、**投稿与审稿** 三条工作流组织，共 **46 个 skills**。先选要完成的工作流，再按阶段调用 skill；也可以独立运行某一步。支持 Claude Code / Codex。
+> 「**AI学术训练营**」（乔淼PhD）配套的 **AI学术工作流** skills 库，按 **期刊初稿**、**综述文章**、**投稿与审稿** 三条工作流组织，共 **48 个 skills**。先选要完成的工作流，再按阶段调用 skill；也可以独立运行某一步。支持 Claude Code / Codex。
 >
 > **谁在用**：AI学术训练营学员
 ---
@@ -39,7 +39,7 @@
 
 ---
 
-## Skills 树（按工作流分类 · 46 个）
+## Skills 树（按工作流分类 · 48 个）
 
 以下是使用导航，按 **工作流 → 阶段 → skill** 展开；仓库中的安装目录仍为 `skills/<name>/`。同一个 skill 可被多条工作流复用，数量按唯一 skill 目录统计，不重复计数。
 
@@ -103,6 +103,8 @@ AI学术工作流
 | 步骤级 | [`lit-verify`](skills/lit-verify/SKILL.md) | 文献验真：逐条实查 DOI/CNKI，零容忍剔除可疑条目 |
 | 工具 | [`cnki`](skills/cnki/SKILL.md) | 知网检索、按篇名核对、导出题录（自带脚本开浏览器，不用装 MCP） |
 | 工具 | [`journal-rank`](skills/journal-rank/SKILL.md) | 查英文期刊收录（SSCI / SCIE / AHCI / ESCI / EI）、影响因子、JCR 分区（数据来自 iJournal，不用登录） |
+| 工具 | [`scholar`](skills/scholar/SKILL.md) | 谷歌学术检索、谁引了这篇、导出（自带脚本开浏览器，不用账号） |
+| 工具 | [`openalex`](skills/openalex/SKILL.md) | 英文文献检索、按 DOI / 篇名核对、被引数、引用链（公开接口，不开浏览器） |
 | 步骤级 | [`lit-pyramid`](skills/lit-pyramid/SKILL.md) | 金字塔分层：Classic / Key / Supporting 硬指标 + 对话关系 + 覆盖配额 |
 | 步骤级 | [`lit-pdf-zotero`](skills/lit-pdf-zotero/SKILL.md) | 批量 PDF 获取 + Zotero 入库 + 金字塔/PXYV 罗盘可视化 |
 
@@ -292,8 +294,8 @@ cp -r ai-academic-workflow/skills/* "${CODEX_HOME:-$HOME/.codex}/skills/"
 
 | 外部工具 | 从哪装 | 用到它的 skill | 没装时会怎样 |
 |---|---|---|---|
-| Node.js 18 以上 + Chrome（或 Edge） | [nodejs.org](https://nodejs.org/)；本库的 `cnki`、`journal-rank` skill 自带脚本，自己开一个单独的浏览器窗口查知网、查期刊 | `cnki`、`journal-rank`，以及调用它们的 `pxyv-search`、`lit-verify`、`lit-pdf-zotero` | 没有 Node.js 脚本跑不了；中文检索同下一行「一个库都没有」；中文验真改查万方 / 维普 / 期刊官网 / DOI，标「替代核查」 |
-| 数据库检索 skills：`wos-*`（Web of Science）、`sd-*`（ScienceDirect）、`gs-*`（Google Scholar）；中文 PDF 下载 `cnki-download` | [wos-skills](https://github.com/cookjohn/wos-skills)、[sd-skills](https://github.com/cookjohn/sd-skills)、[gs-skills](https://github.com/cookjohn/gs-skills)、[cnki-skills](https://github.com/cookjohn/cnki-skills)；要配 Chrome DevTools MCP，在浏览器里登录（WoS、ScienceDirect、知网下载要用机构账号） | `pxyv-search`、`lit-verify`、`lit-pdf-zotero` | `pxyv-search` 跳过没装的库并告诉你，一个都没有时只给各维度检索词，由你手动去搜；`lit-verify` 改走 doi.org / Crossref / OpenAlex，还查不了的给每条的手动核查链接，不凭印象判真假 |
+| Node.js 18 以上 + Chrome（或 Edge） | [nodejs.org](https://nodejs.org/)；本库的 `cnki`、`journal-rank`、`scholar` skill 自带脚本，自己开一个单独的浏览器窗口查知网、查期刊、查谷歌学术 | `cnki`、`journal-rank`、`scholar`、`openalex`（`openalex` 只要 Node.js），以及调用它们的 `pxyv-search`、`lit-verify`、`lit-pdf-zotero` | 没有 Node.js 脚本跑不了；中英文检索都跑不了，`pxyv-search` 只输出检索词清单让用户手动查；中文验真改查万方 / 维普 / 期刊官网 / DOI，标「替代核查」 |
+| 中文 PDF 下载 `cnki-download` | [cnki-skills](https://github.com/cookjohn/cnki-skills)；要配 Chrome DevTools MCP，在浏览器里用机构账号登录知网 | `lit-pdf-zotero` | 没装：中文 PDF 标 no-pdf，其余照常 |
 | scansci-pdf（PDF 下载 MCP 服务） | [Rimagination/scansci-pdf](https://github.com/Rimagination/scansci-pdf)，要 Python 3.11 以上 | `review-synthesis`、`skill-workshop-plan`，以及 `lit-pdf-zotero` 的下载渠道 | 只从开放获取渠道找全文；`review-synthesis` 拿不到全文的研究按「仅摘要」降级表述，**不会因此把它踢出纳入集**；`skill-workshop-plan` 给手动获取方式 |
 | Zotero 服务（zotero-mcp） | [54yyyu/zotero-mcp](https://github.com/54yyyu/zotero-mcp)，服务名要叫 `zotero`；本地模式只能读，要入库还得配 Zotero 网页版的 API key | `lit-pdf-zotero`、`sr-search-record`、`knowledge-module-list`、`knowledge-module-gen`、`critical-paper-reading`、`model-paper-deconstruct`、`review-synthesis`、`review-draft`、`review-draft-assembly` | `lit-pdf-zotero` 只落盘 PDF 和 `文献清单.md`，告诉你怎么手动导入；`sr-search-record` 改导出 RIS / BibTeX；文献分析类改读本地 PDF 或文献清单；引用核验改对照文献清单 |
 | OpenAlex API key（免费）+ Python 3 | [openalex.org](https://openalex.org/) 申请；写进环境变量 `OPENALEX_API_KEY` 或文件 `~/.config/openalex/api_key` | `sr-search-record`（自带脚本 `scripts/oa_search.py`） | 没有 key 只抓得到每个检索式的第一页（100 条），照样往下走，写进 `降级记录.md`，PRISMA 数字标「待有 key 后完整抓取」；没有 Python 3 脚本跑不了 |

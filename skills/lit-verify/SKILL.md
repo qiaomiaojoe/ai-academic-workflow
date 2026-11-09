@@ -17,10 +17,10 @@ description: 文献验真（乔淼PhD · AI学术训练营 · AI学术工作流�
 ## 验真协议（每条三步）
 
 1. **实查**：
-   - 英文条目：用 DOI 去 doi.org / Crossref / OpenAlex 解析，核对标题 + 作者 + 年份 + 期刊；无 DOI 的用标题在 Google Scholar / OpenAlex / Crossref 精确检索；来自 WoS / ScienceDirect 的可用 `wos-paper-detail` / `sd-paper-detail` 复核。
+   - 英文条目：首选 `openalex` skill 的 `verify`（有 DOI 带 `--doi`，再带 `--author 第一作者姓 --year 年份 --journal 刊名`；多条用 `verify --file`），它查 OpenAlex / Crossref 并逐项比对，回「对上 / 有出入 / 没找到」（撤稿写在 `diff` 里，按「存疑」列给用户）。`对上` = 通过；`有出入` 按下面「存疑」处理；`没找到` 再用 `scholar` skill 的 `search --title-only --exact "篇名"` 查一次（图书、书章、会议常常只有谷歌学术收），还没有才算查无此文。`没查成` 或接口全都用不了时，改走 doi.org / 出版商页面核对，不要凭印象判定。
    - 中文条目：首选 `cnki` skill 的 `verify "篇名" --author 第一作者 --year 年份 --journal 刊名`，它按篇名去知网查并逐项比对，回「对上 / 有出入 / 没找到」。`对上` = 通过；`有出入` 按下面「存疑」处理；`没找到` 照样换下一个来源再查，不直接剔除。
      **知网用不了**（没装 `cnki` skill，或它回的 status 是 `captcha` / `blocked` / `limit` / `unreachable` / `layout_changed` / `no_browser`）时不要停在「待核」，按顺序换下一个来源，**有一个来源的标题 / 作者 / 期刊 / 年份对得上就算通过**：万方 / 维普的论文详情页 → 期刊官网的目录或文章页 → 有 DOI 的走 doi.org / Crossref（不少中文期刊有 DOI）。这样通过的标「替代核查：<来源>」，报告里单列一节「知网用不了，替代核查的」，写明用的哪个来源；都查不到的照样按零容忍剔除。
-2. **被引数采集**：英文取 OpenAlex `cited_by_count` 或 Google Scholar 引用数；中文取 `cnki` 返回的 `cited`（知网「被引」）（替代核查的取万方 / 维普的被引数，都没有就留空写「无」，不估）。记入条目（下游金字塔分层要用）。
+2. **被引数采集**：英文取 `openalex` 的 `verify` 返回的 `cited`，它没有时取 `scholar` 的 `cited`（表里注明来源，两家数字不同是正常的）；中文取 `cnki` 返回的 `cited`（知网「被引」）（替代核查的取万方 / 维普的被引数，都没有就留空写「无」，不估）。记入条目（下游金字塔分层要用）。
 3. **判定（零容忍）**：
    - ✅ 通过：全字段核对一致（容许大小写 / 缩写级差异）。
    - ⚠️ 存疑：找得到但字段有出入（年份差 / 期刊不符 / 作者顺序不同）→ 列出出入让用户定夺，默认按实查结果修正后保留。

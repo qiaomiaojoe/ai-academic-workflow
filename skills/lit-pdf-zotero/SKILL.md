@@ -1,6 +1,6 @@
 ---
 name: lit-pdf-zotero
-description: 文献 PDF 获取 + Zotero 入库 + 可视化（乔淼PhD · AI学术训练营 · AI学术工作流）。对一份文献清单批量：确认 DOI/CNKI ID → 补全引用数 → 多渠道找 PDF 落盘（OA/preprint/sd-download/wos-download/cnki-download）→ 入一个 Zotero Collection（层级和 PXYV 节点记在标签里，不建子集合；含 extra 元数据）→ 生成金字塔分布图 + PXYV 罗盘投影双图 HTML。Trigger on："把这批文献下载 PDF 入库 Zotero"、"文献入库+可视化"、"batch download PDFs and import to Zotero"、"入 Zotero 并画文献金字塔"。
+description: 文献 PDF 获取 + Zotero 入库 + 可视化（乔淼PhD · AI学术训练营 · AI学术工作流）。对一份文献清单批量：确认 DOI/CNKI ID → 补全引用数 → 多渠道找 PDF 落盘（scansci-pdf/OA/preprint/cnki-download）→ 入一个 Zotero Collection（层级和 PXYV 节点记在标签里，不建子集合；含 extra 元数据）→ 生成金字塔分布图 + PXYV 罗盘投影双图 HTML。Trigger on："把这批文献下载 PDF 入库 Zotero"、"文献入库+可视化"、"batch download PDFs and import to Zotero"、"入 Zotero 并画文献金字塔"。
 ---
 
 # Lit PDF + Zotero · 获取 PDF → 入库 → 可视化
@@ -20,11 +20,11 @@ description: 文献 PDF 获取 + Zotero 入库 + 可视化（乔淼PhD · AI学�
 
 ## Step 2 · 补全引用数
 
-英文用 OpenAlex API（`https://api.openalex.org/works/doi:{DOI}` 取 `cited_by_count`）或 Google Scholar；中文用 `cnki` skill 的 `verify` 或 `detail`（取 `cited`）。清单里已有的不重采。
+英文用 `openalex` skill 的 `verify --doi`（取 `cited`），没有时用 `scholar` 的 `cited`；中文用 `cnki` skill 的 `verify` 或 `detail`（取 `cited`）。清单里已有的不重采。
 
 ## Step 3 · 查找 PDF 并落盘
 
-- 英文优先 `sd-download` / `wos-download` → Open Access（Unpaywall / OpenAlex / 出版商 OA）→ 作者自存档 → preprint（arXiv / SSRN / OSF）
+- 英文优先 `scansci-pdf`（`scansci_pdf_download`，有 DOI 就用 DOI）→ Open Access（Unpaywall / OpenAlex / 出版商 OA）→ 作者自存档 → preprint（arXiv / SSRN / OSF）
 - 中文用 `cnki-download`（要求已登录）
 - 找不到的标 "no-pdf"；**不从可疑来源硬凑**。
 
@@ -35,7 +35,7 @@ description: 文献 PDF 获取 + Zotero 入库 + 可视化（乔淼PhD · AI学�
 
 Collection 结构：只建一个 Collection（名字 = Collection 名），**不建子集合**（不按金字塔层、不按 PXYV 节点分）。层级和节点一律记在标签里，用户在 Zotero 里按标签筛就能分开看。Collection 已存在就直接往里加。
 
-逐条入库：有 DOI → `zotero_add_item(source=doi, collections=[Collection], tags=[金字塔层, PXYV节点, 项目slug], attach_mode="auto", if_exists="file")`（旧版 zotero-mcp 叫 `zotero_add_by_doi`，没有 `if_exists`）；只有 URL/CNKI → `zotero_add_item(source=url, …)`（旧版 `zotero_add_by_url`）（或用 `gs-export` / `sd-export` / `wos-export` 直接推送；中文没有 DOI 的，可用 `cnki` skill 的 `export <条目编号> --to zotero` 导进 Zotero 当前选中的分类，再用 `zotero_set_item_collections` 放进 Collection）。入库后用 `zotero_update_item` 写 `extra` 字段：
+逐条入库：有 DOI → `zotero_add_item(source=doi, collections=[Collection], tags=[金字塔层, PXYV节点, 项目slug], attach_mode="auto", if_exists="file")`（旧版 zotero-mcp 叫 `zotero_add_by_doi`，没有 `if_exists`）；只有 URL/CNKI → `zotero_add_item(source=url, …)`（旧版 `zotero_add_by_url`）（或用 `scholar` 的 `export --to zotero` 直接推送；中文没有 DOI 的，可用 `cnki` skill 的 `export <条目编号> --to zotero` 导进 Zotero 当前选中的分类，再用 `zotero_set_item_collections` 放进 Collection）。入库后用 `zotero_update_item` 写 `extra` 字段：
 
 ```
 citations: 123

@@ -4,6 +4,16 @@ AI学术工作流 skills（乔淼PhD · AI学术训练营）。整个仓库一�
 
 版本号怎么升：改措辞、修毛病 → 第三位（1.1.0 → 1.1.1）；加 skill、删 skill、改了 skill 的输入或产出文件 → 第二位（1.1.0 → 1.2.0）；整套推倒重来 → 第一位。新的写在最上面。
 
+## 1.4.0（2026-11-09）
+
+（加了 skill，升第二位。11-03 定的「检索 skill 重做留在 1.2.x」已经过时，乔淼 11-09 定了改向，接着往下加。配合 POPPER 内容 1.6.2。）
+
+- **新加 `scholar`：谷歌学术检索**。关键词、作者、刊名、年份、精确短语、只搜篇名；被引数；「谁引了这篇」；导出 BibTeX 或进 Zotero。不用账号，自带脚本，和 `cnki`、`journal-rank` 共用单独的浏览器窗口；每页隔 5–10 秒，一小时最多 60 页，遇到验证码请用户点，不破解。从头写，没有用 cookjohn/gs-skills 的代码。
+- **新加 `openalex`：英文文献公开接口**。检索、按 DOI 或篇名核对（对上 / 有出入 / 没找到，会报撤稿）、被引数、引用链。OpenAlex 用不了退到 Crossref，引用链退到 Semantic Scholar；不用浏览器，key 可填可不填。
+- **`pxyv-search` 英文检索改用 `scholar`，上不去谷歌时用 `openalex`**；可以按期刊级别筛（`journal-rank`），报告写明这不等于 Web of Science / Scopus 检索结果。不再用 `gs-*`、`sd-*`、`wos-*`。
+- **`lit-verify` 英文验真改用 `openalex` 的 `verify`**，再用 `scholar` 补查。
+- **`lit-pdf-zotero` 英文 PDF 优先 `scansci-pdf`**，不再写 `sd-download`、`wos-download`。中文 PDF 暂时还是 `cnki-download`。
+
 ## 1.3.1（2026-11-07）
 
 - **`sr-search-record` 在 Mac 的 AI 沙箱里检索不再断**：以前 `oa_search.py` 用 Python 自带的 urllib 联网，每次请求完就断开连接；POPPER 交给 Claude Code 的任务在沙箱里跑，联网要过沙箱的代理，代理会把还没转完的数据丢掉，报 `IncompleteRead`，重试 5 次都一样，检索跑不起来。现在改成保持连接、多次请求共用一条连接（照旧沿用系统代理设置），OpenAlex 和 Europe PMC 都是。11-07 在沙箱里实测 probe、recall、fetch（754 条翻页）、cite、epmc 都正常。
