@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// 知网检索 / 核对 / 导出（乔淼PhD · AI学术训练营）。只用 Node 自带的东西（Node 18 以上），不装 npm 包。
+// 知网检索 / 核对 / 导出 / 下载（乔淼PhD · AI学术训练营）。只用 Node 自带的东西（Node 18 以上），不装 npm 包。
 //
 // 做法：开一个单独资料的 Chrome（没有就用 Edge），学员在这个窗口里用自己的身份上知网；
 // 脚本通过浏览器调试口，在知网页面里调用知网自己的检索 / 导出接口，拿回 JSON。不破解验证码、不绕登录。
@@ -9,10 +9,11 @@
 //   node cnki.mjs verify "篇名" [--author 第一作者] [--year 2024] [--journal 刊名]
 //   node cnki.mjs detail <行号|条目编号|知网链接>...      行号指上一次 search 的第几条
 //   node cnki.mjs export <行号|条目编号>... --to ris [--out 文件.ris] | --to zotero
+//   node cnki.mjs download <行号|知网详情页链接>... [--dir 文件夹] [--format pdf|caj]   要先在这个窗口里登录；一次最多 20 篇
 //   node cnki.mjs check                                  自检：每个字段还取不取得到
 //
 // 输出一律是一段 JSON（UTF-8），status 只有这几种：
-//   ok 成功 / not_found 没查到 / captcha 要拖验证码 / blocked 被知网拦了 / limit 本小时查太多了 /
+//   ok 成功 / not_found 没查到 / need_login 要先登录才能下载 / captcha 要拖验证码 / blocked 被知网拦了 / limit 本小时查太多了 /
 //   layout_changed 知网页面改了、脚本要更新 / unreachable 知网打不开 / no_browser 没找到 Chrome 或 Edge / error 其他
 import { spawn } from 'node:child_process';
 import http from 'node:http';
@@ -333,6 +334,99 @@ function toRis(m) {
   return L.filter(([, v]) => v).map(([k, v]) => `${k}  - ${String(v).replace(/\s+/g, ' ')}`).join('\r\n') + '\r\nER  - \r\n';
 }
 
+// ---------- 下载 PDF ----------
+// 在学员自己登录的这个浏览器里，一篇一篇走知网自己的下载链接。不点付费、不绕过权限：没权限就报告，换下一篇
+
+const DL_PER_RUN = 20, DL_PER_HOUR = 40; // 一次最多 20 篇，一小时最多 40 篇，每篇隔 8–15 秒：批量下载最容易被知网封账号或封学校 IP
+
+async function paceDownload() {
+  const st = readJson(STATE, {}), now = Date.now();
+  st.dl = (st.dl || []).filter(t => now - t < 3600e3);
+  if (st.dl.length >= DL_PER_HOUR) throw new Stop('limit', `这一小时已经下了 ${st.dl.length} 篇，再下容易被知网封账号或封学校 IP。过一小时再接着下`);
+  const gap = 8000 + Math.random() * 7000 - (now - (st.lastDl || 0));
+  if (gap > 0) await sleep(gap);
+  st.lastDl = Date.now(); st.dl.push(st.lastDl);
+  writeJson(STATE, st);
+}
+
+function downloadLinks() {
+  const clean = s => (s || '').replace(/\s+/g, ' ').trim();
+  const href = id => document.querySelector('a#' + id)?.href || '';
+  return { title: clean(document.querySelector('.wx-tit h1')?.textContent) || clean(document.title.replace(/\s*-\s*中国知网\s*$/, '')), pdf: href('pdfDown'), caj: href('cajDown'), detail: !!document.querySelector('.wx-tit, #export-id') };
+}
+
+function orderState() {
+  const text = (document.body?.innerText || '').replace(/\s+/g, ' ').slice(0, 1500);
+  const cap = document.querySelector('#tcaptcha_transform_dy, #tcaptcha_iframe, .tencent-captcha');
+  return { url: location.href, text, captcha: !!(cap && cap.getBoundingClientRect().height > 0) || /拖动下方拼图|完成验证|安全验证/.test(text) };
+}
+
+const safeName = s => String(s || '未命名').replace(/[\\/:*?"<>|\r\n\t]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 80).trim();
+
+// 下载链接走完，要么浏览器落下一个文件，要么停在一个页面上（要登录、要付费、没权限）
+async function fetchFile(b, href, referrer, tmp) {
+  await b.cmd('Browser.setDownloadBehavior', { behavior: 'allow', downloadPath: tmp });
+  await b.cmd('Page.navigate', { url: href, referrer }).catch(e => { throw new Stop('unreachable', `下载链接打不开：${e.message}`); });
+  let lastSize = -1;
+  for (let i = 0; i < 120; i++) {
+    await sleep(1000);
+    const names = fs.readdirSync(tmp), done = names.find(f => !/\.(crdownload|tmp)$/i.test(f));
+    if (done) { const size = fs.statSync(path.join(tmp, done)).size; if (size > 0 && size === lastSize) return { file: path.join(tmp, done) }; lastSize = size; continue; }
+    if (names.length) continue; // 正在下
+    const s = await b.run(orderState).catch(() => null);
+    if (!s || s.url === referrer || i < 2) continue; // 还停在详情页上：页面跳转没完成，或者文件还没开始落
+    if (s.captcha) { await waitCaptcha(b); continue; }
+    if (/login\.cnki|\/login/i.test(s.url) || /请先登录|用户登录|账号登录|扫码登录|机构登录/.test(s.text)) return { result: 'need_login' };
+    if (/没有.{0,8}权限|无权|未订购|未开通|不在.{0,6}订购/.test(s.text)) return { result: 'no_access', note: s.text.slice(0, 120) };
+    if (/余额|充值|支付|付费|购买|价格|元\b/.test(s.text)) return { result: 'need_payment', note: s.text.slice(0, 120) };
+    if (i > 15) return { result: 'unknown', note: s.text.slice(0, 200) };
+  }
+  return { result: 'timeout' };
+}
+
+async function downloadOne(b, ref, dir, format) {
+  await pace();
+  await b.cmd('Page.navigate', { url: ref.link }).catch(e => { throw new Stop('unreachable', `详情页打不开：${e.message}`); });
+  let links = {};
+  for (let i = 0; i < 40; i++) {
+    await sleep(500);
+    const s = await b.run(pageState).catch(() => null);
+    if (s?.captcha) await waitCaptcha(b);
+    links = await b.run(downloadLinks).catch(() => ({}));
+    if (links.detail && (links.pdf || links.caj || i > 8)) break;
+  }
+  if (!links.detail) throw new Stop('layout_changed', `详情页结构变了，或者这个链接已经失效（知网的详情链接过一阵会失效，重新 search 一次）：${ref.title || ref.link.slice(0, 60)}`);
+  const title = ref.title || links.title, href = format === 'caj' ? links.caj : links.pdf;
+  if (!href) return { title, result: format === 'caj' ? 'no_caj' : 'no_pdf', msg: format === 'caj' ? '这篇没有 CAJ' : `这篇知网没给 PDF${links.caj ? '，只有 CAJ（要 CAJ 加 --format caj）' : ''}` };
+  const target = path.join(dir, `${safeName(title)}.${format}`);
+  if (fs.existsSync(target)) return { title, result: 'exists', file: target };
+  await paceDownload();
+  const tmp = fs.mkdtempSync(path.join(dir, '.下载中-'));
+  try {
+    const url = await b.run(() => location.href);
+    const r = await fetchFile(b, href, url, tmp);
+    if (r.file) {
+      const head = fs.readFileSync(r.file).subarray(0, 5).toString('latin1');
+      if (format === 'pdf' && head !== '%PDF-') return { title, result: 'bad_file', msg: '下下来的不是 PDF（可能是 CAJ 或错误页）' };
+      fs.renameSync(r.file, target);
+      return { title, result: 'ok', file: target, size_kb: Math.round(fs.statSync(target).size / 1024) };
+    }
+    return { title, ...r };
+  } finally { fs.rmSync(tmp, { recursive: true, force: true }); await b.cmd('Browser.setDownloadBehavior', { behavior: 'default' }).catch(() => {}); } // 这个临时文件夹是自己建的；不留下，也不影响窗口之后的正常下载
+}
+
+// 行号（上一次 search 的第几条）或详情页链接 → { title, link }
+function resolveLinks(refs) {
+  const last = readJson(LAST, null);
+  return refs.flatMap(r => String(r).split(/[,，\s]+/)).filter(Boolean).map(r => {
+    if (/^https?:/.test(r)) return { title: '', link: r };
+    if (!/^\d{1,3}$/.test(r)) throw new Stop('error', `下载要给行号或知网详情页链接，「${r}」不行`);
+    const row = last?.rows?.[Number(r) - 1];
+    if (!row?.link) throw new Stop('error', `上一次搜索结果里没有第 ${r} 条（先 search，再用行号）`);
+    return { title: row.title, link: row.link };
+  });
+}
+
 // ---------- 命令 ----------
 
 function parseArgs(argv) {
@@ -405,6 +499,11 @@ async function check(b) {
     t('导出·篇名和结果行一致', norm(m.title) === norm(row.title));
     t('年份筛选（按刊期年）', /^202[34]$/.test(m.year), m.year);
   }
+  if (row.link) { // 只看详情页上有没有下载入口，不真的下
+    await pace(); await b.cmd('Page.navigate', { url: row.link }); let l = {};
+    for (let i = 0; i < 30 && !(l.pdf || l.caj); i++) { await sleep(500); l = await b.run(downloadLinks).catch(() => ({})); }
+    t('详情页·下载入口', !!(l.pdf || l.caj), l.pdf ? 'PDF' : l.caj ? 'CAJ' : '');
+  }
   const host = readJson(STATE, {}).host;
   return { status: items.every(i => i.结果 === '✓') ? 'ok' : 'layout_changed', host, items };
 }
@@ -413,6 +512,7 @@ async function main() {
   const [cmd, ...rest] = process.argv.slice(2);
   const { pos, opt } = parseArgs(rest);
   if (!cmd || cmd === 'help' || opt.help) return { status: 'ok', usage: fs.readFileSync(new URL(import.meta.url), 'utf8').split('\n').slice(1).filter((l, i, all) => all.slice(0, i + 1).every(x => x.startsWith('//'))).map(l => l.replace(/^\/\/ ?/, '')).join('\n') };
+  if (cmd === 'download' && !pos.length) throw new Stop('error', '要给行号或知网详情页链接');
   const so = cmd === 'search' && pos[0] ? searchOptions(pos.join(' '), opt) : null; // 参数先检查，错了不用开浏览器
   const b = await connect();
   try {
@@ -453,6 +553,22 @@ async function main() {
       const out = path.resolve(typeof opt.out === 'string' ? opt.out : `知网导出-${new Date().toISOString().slice(0, 10)}.ris`);
       fs.writeFileSync(out, '﻿' + ris);
       return { status: 'ok', to: 'ris', file: out, count: good.length, failed: metas.filter(m => m.error) };
+    }
+    if (cmd === 'download') {
+      const refs = resolveLinks(pos), format = opt.format === 'caj' ? 'caj' : 'pdf';
+      if (!refs.length) throw new Stop('error', '要给行号或知网详情页链接');
+      if (refs.length > DL_PER_RUN) throw new Stop('error', `一次最多下 ${DL_PER_RUN} 篇，分开下，中间隔一阵`);
+      const dir = path.resolve(typeof opt.dir === 'string' ? opt.dir : '.'); fs.mkdirSync(dir, { recursive: true });
+      await b.cmd('Page.enable');
+      const items = [];
+      for (const ref of refs) {
+        const r = await downloadOne(b, ref, dir, format);
+        items.push(r);
+        if (r.result === 'need_login') return { status: 'need_login', msg: '知网要登录才能下载。运行 open，请用户在弹出的窗口里登录（学校账号或个人账号），登录后再运行同一条命令', items };
+        if (r.result === 'timeout') return { status: 'error', msg: '等了两分钟没下完，先停下', items };
+      }
+      const got = items.filter(x => x.result === 'ok' || x.result === 'exists').length;
+      return { status: got ? 'ok' : 'not_found', downloaded: got, total: items.length, items };
     }
     if (cmd === 'check') return await check(b);
     throw new Stop('error', `不认识的命令 ${cmd}。用 node cnki.mjs help 看用法`);

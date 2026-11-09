@@ -12,7 +12,8 @@ AI学术工作流 skills（乔淼PhD · AI学术训练营）。整个仓库一�
 - **新加 `openalex`：英文文献公开接口**。检索、按 DOI 或篇名核对（对上 / 有出入 / 没找到，会报撤稿）、被引数、引用链。OpenAlex 用不了退到 Crossref，引用链退到 Semantic Scholar；不用浏览器，key 可填可不填。
 - **`pxyv-search` 英文检索改用 `scholar`，上不去谷歌时用 `openalex`**；可以按期刊级别筛（`journal-rank`），报告写明这不等于 Web of Science / Scopus 检索结果。不再用 `gs-*`、`sd-*`、`wos-*`。
 - **`lit-verify` 英文验真改用 `openalex` 的 `verify`**，再用 `scholar` 补查。
-- **`lit-pdf-zotero` 英文 PDF 优先 `scansci-pdf`**，不再写 `sd-download`、`wos-download`。中文 PDF 暂时还是 `cnki-download`。
+- **`cnki` 加 `download`：下载中文 PDF**。在学员自己登录的浏览器窗口里，走知网自己的下载链接，一次最多 20 篇、一小时最多 40 篇；要登录就请用户登录，要付费、没权限就列出来，什么都不点，不绕过。
+- **`lit-pdf-zotero` 英文 PDF 优先 `scansci-pdf`，中文用 `cnki` 的 `download`**，不再写 `sd-download`、`wos-download`、`cnki-download`。
 
 ## 1.3.1（2026-11-07）
 

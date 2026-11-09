@@ -1,6 +1,6 @@
 ---
 name: lit-pdf-zotero
-description: 文献 PDF 获取 + Zotero 入库 + 可视化（乔淼PhD · AI学术训练营 · AI学术工作流）。对一份文献清单批量：确认 DOI/CNKI ID → 补全引用数 → 多渠道找 PDF 落盘（scansci-pdf/OA/preprint/cnki-download）→ 入一个 Zotero Collection（层级和 PXYV 节点记在标签里，不建子集合；含 extra 元数据）→ 生成金字塔分布图 + PXYV 罗盘投影双图 HTML。Trigger on："把这批文献下载 PDF 入库 Zotero"、"文献入库+可视化"、"batch download PDFs and import to Zotero"、"入 Zotero 并画文献金字塔"。
+description: 文献 PDF 获取 + Zotero 入库 + 可视化（乔淼PhD · AI学术训练营 · AI学术工作流）。对一份文献清单批量：确认 DOI/CNKI ID → 补全引用数 → 多渠道找 PDF 落盘（scansci-pdf/OA/preprint/cnki）→ 入一个 Zotero Collection（层级和 PXYV 节点记在标签里，不建子集合；含 extra 元数据）→ 生成金字塔分布图 + PXYV 罗盘投影双图 HTML。Trigger on："把这批文献下载 PDF 入库 Zotero"、"文献入库+可视化"、"batch download PDFs and import to Zotero"、"入 Zotero 并画文献金字塔"。
 ---
 
 # Lit PDF + Zotero · 获取 PDF → 入库 → 可视化
@@ -25,7 +25,7 @@ description: 文献 PDF 获取 + Zotero 入库 + 可视化（乔淼PhD · AI学�
 ## Step 3 · 查找 PDF 并落盘
 
 - 英文优先 `scansci-pdf`（`scansci_pdf_download`，有 DOI 就用 DOI）→ Open Access（Unpaywall / OpenAlex / 出版商 OA）→ 作者自存档 → preprint（arXiv / SSRN / OSF）
-- 中文用 `cnki-download`（要求已登录）
+- 中文用 `cnki` skill 的 `download <行号或详情页链接> --dir 文献/PDF`（要用户先在它的浏览器窗口里登录；回 `need_login` 就运行 `open` 请用户登录，不问账号密码）。`no_access` / `need_payment` 的标 no-pdf 列给用户，不去点付费
 - 找不到的标 "no-pdf"；**不从可疑来源硬凑**。
 
 最终清单落盘（下游文献分析在 Zotero 不可用时的兜底元数据）：
