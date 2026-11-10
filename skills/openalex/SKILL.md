@@ -16,6 +16,9 @@ node <skill>/scripts/openalex.mjs <命令> [参数]
 | 检索（篇名 + 摘要） | `search "检索词" [--years 2020-2025] [--size 25] [--page 1]` |
 | 核对一篇 | `verify "篇名" [--doi 10.x/y] [--author 第一作者姓] [--year 2024] [--journal 刊名]` |
 | 一次核对多条 | `verify --file 清单.json`，内容是 `[{"title":…,"doi":…,"author":…,"year":…,"journal":…}]` |
+
+- 要给一篇文献补 DOI、完整篇名、完整刊名，用 `verify`，**不要用 `search` 搜篇名再取第一条**（第一条常常是别的文献）。
+- 谷歌学术截断的篇名、刊名（带 `…`）原样传进去就行，`verify` 认得出来，完整的写在 `match` 里，不算「有出入」。
 | 谁引了这篇 | `cited-by <DOI> [--size 25]`（按被引数从高到低） |
 | 这篇引了谁 | `refs <DOI> [--size 50]` |
 | 自检 | `check` |

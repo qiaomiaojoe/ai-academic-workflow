@@ -23,6 +23,15 @@ class Stop extends Error { constructor(status, msg, extra = {}) { super(msg); Ob
 const readText = f => { try { return fs.readFileSync(f, 'utf8').trim(); } catch { return ''; } };
 const KEY = process.env.OPENALEX_API_KEY || readText(path.join(os.homedir(), '.config', 'openalex', 'api_key'));
 const norm = s => String(s || '').normalize('NFKC').toLowerCase().replace(/&/g, ' and ').replace(/[\s\p{P}\p{S}]/gu, '');
+// Crossref（偶尔 OpenAlex）给的篇名、刊名带网页写法：&amp;、<i>…</i>。不还原的话「Social Science &amp; Medicine」会被当成刊名不同（11-10 实测）
+const ENT = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' };
+const plain = s => String(s || '').replace(/<[^>]+>/g, '')
+  .replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (m, e) => { const k = e.toLowerCase(); if (k[0] !== '#') return ENT[k] ?? m; const n = k[1] === 'x' ? parseInt(k.slice(2), 16) : parseInt(k.slice(1), 10); return Number.isFinite(n) ? String.fromCodePoint(n) : m; })
+  .replace(/\s+/g, ' ').trim();
+// 谷歌学术把长篇名截断成「…」：按截断前后的几段都在完整篇名里来认（合起来至少 25 个字母数字，太短不认）
+const ELLIPSIS = /…|\.{3}/;
+const pieces = t => String(t || '').split(ELLIPSIS).map(norm).filter(Boolean);
+const truncatedMatch = (full, cut, min = 25) => { if (!ELLIPSIS.test(cut || '')) return false; const f = norm(full), ps = pieces(cut); return ps.join('').length >= min && ps.every(p => f.includes(p)); };
 const fixDoi = s => String(s || '').trim().replace(/^https?:\/\/(dx\.)?doi\.org\//i, '').replace(/^doi:\s*/i, '');
 
 // 请求：限流、服务器错误重试一次。报错里不带网址（网址里有 key）
@@ -44,13 +53,13 @@ async function get(base, p, params = {}, name = base) {
 
 // 两边的记录都变成同一个样子
 function abstractOf(inv) { if (!inv) return ''; const w = []; for (const [t, ps] of Object.entries(inv)) for (const p of ps) w[p] = t; return w.join(' '); }
-const fromOA = w => ({ title: w.title || w.display_name || '', authors: (w.authorships || []).map(a => a.author?.display_name).filter(Boolean), year: w.publication_year ? String(w.publication_year) : '',
-  journal: w.primary_location?.source?.display_name || '', doi: fixDoi(w.doi), cited: w.cited_by_count ?? null, type: w.type || '', abstract: abstractOf(w.abstract_inverted_index),
+const fromOA = w => ({ title: plain(w.title || w.display_name), authors: (w.authorships || []).map(a => plain(a.author?.display_name)).filter(Boolean), year: w.publication_year ? String(w.publication_year) : '',
+  journal: plain(w.primary_location?.source?.display_name), doi: fixDoi(w.doi), cited: w.cited_by_count ?? null, type: w.type || '', abstract: abstractOf(w.abstract_inverted_index),
   retracted: !!w.is_retracted, open_access: !!w.open_access?.is_oa, id: (w.id || '').split('/').pop(), source: 'OpenAlex' });
-const fromCR = w => ({ title: (w.title || [])[0] || '', authors: (w.author || []).map(a => [a.given, a.family].filter(Boolean).join(' ') || a.name).filter(Boolean),
-  year: String((w.issued?.['date-parts']?.[0]?.[0]) || ''), journal: (w['container-title'] || [])[0] || '', doi: fixDoi(w.DOI), cited: w['is-referenced-by-count'] ?? null, type: w.type || '',
-  abstract: String(w.abstract || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim(), retracted: false, open_access: null, id: '', source: 'Crossref' });
-const fromS2 = w => ({ title: w.title || '', authors: (w.authors || []).map(a => a.name), year: w.year ? String(w.year) : '', journal: w.venue || '', doi: fixDoi(w.externalIds?.DOI), cited: w.citationCount ?? null, source: 'Semantic Scholar' });
+const fromCR = w => ({ title: plain((w.title || [])[0]), authors: (w.author || []).map(a => plain([a.given, a.family].filter(Boolean).join(' ') || a.name)).filter(Boolean),
+  year: String((w.issued?.['date-parts']?.[0]?.[0]) || ''), journal: plain((w['container-title'] || [])[0]), doi: fixDoi(w.DOI), cited: w['is-referenced-by-count'] ?? null, type: w.type || '',
+  abstract: plain(String(w.abstract || '').replace(/<[^>]+>/g, ' ')), retracted: false, open_access: null, id: '', source: 'Crossref' });
+const fromS2 = w => ({ title: plain(w.title), authors: (w.authors || []).map(a => plain(a.name)), year: w.year ? String(w.year) : '', journal: plain(w.venue), doi: fixDoi(w.externalIds?.DOI), cited: w.citationCount ?? null, source: 'Semantic Scholar' });
 const OA_FIELDS = 'id,doi,title,display_name,authorships,publication_year,primary_location,cited_by_count,type,is_retracted,open_access,abstract_inverted_index';
 
 const worst = fails => fails.includes('layout_changed') ? 'layout_changed' : fails.includes('limit') ? 'limit' : fails.includes('unreachable') ? 'unreachable' : 'error';
@@ -69,23 +78,27 @@ async function byDoi(doi) {
 
 async function byTitle(title) {
   const fails = [];
-  const a = await get(OA, '/works', { filter: `title.search:${title.replace(/[,:|"]/g, ' ')}`, 'per-page': '10', select: OA_FIELDS });
+  const q = title.replace(/…|\.{3}/g, ' ');
+  const a = await get(OA, '/works', { filter: `title.search:${q.replace(/[,:|"]/g, ' ')}`, 'per-page': '10', select: OA_FIELDS });
   if (a.json?.results) { const rows = a.json.results.map(fromOA); if (rows.some(r => close(r.title, title))) return rows; } else if (a.fail) fails.push(a.fail);
-  const c = await get(CR, '/works', { 'query.bibliographic': title, rows: '10' });
+  const c = await get(CR, '/works', { 'query.bibliographic': q, rows: '10' });
   if (c.json?.message?.items) return [...c.json.message.items.map(fromCR), ...(a.json?.results || []).map(fromOA)]; if (c.fail) fails.push(c.fail);
   if (fails.length === 2) giveUp(fails);
   return (a.json?.results || []).map(fromOA);
 }
 
-function close(x, y) { const a = norm(x), b = norm(y); return a === b || (a.length && b.length && (a.includes(b) || b.includes(a)) && Math.min(a.length, b.length) / Math.max(a.length, b.length) > 0.85); }
+function close(x, y) {
+  if (ELLIPSIS.test(y || '')) return truncatedMatch(x, y); // 截断的篇名只按截断规则认：「Burnout …」不能等于一本叫 Burnout 的书
+  const a = norm(x), b = norm(y); return a === b || (a.length && b.length && (a.includes(b) || b.includes(a)) && Math.min(a.length, b.length) / Math.max(a.length, b.length) > 0.85);
+}
 const brief = ({ abstract, ...m }) => m;
 
 function compare(m, want) {
   const diff = [];
-  if (want.title && norm(m.title) !== norm(want.title)) diff.push(`篇名有差别：实际是「${m.title}」`);
+  if (want.title && norm(m.title) !== norm(want.title) && !truncatedMatch(m.title, want.title)) diff.push(`篇名有差别：实际是「${m.title}」`); // 截断的篇名对得上不算差别，完整篇名看 match.title
   if (want.author) { const w = norm(want.author), hit = m.authors.some(a => norm(a).includes(w)); if (m.authors.length && !hit) diff.push(`作者里没有「${want.author}」（实际：${m.authors.slice(0, 5).join('；')}）`); }
   if (want.year && m.year && String(want.year) !== m.year) diff.push(`年份不同：实际是 ${m.year}`);
-  if (want.journal && m.journal && !norm(m.journal).includes(norm(want.journal)) && !norm(want.journal).includes(norm(m.journal))) diff.push(`刊名不同：实际是「${m.journal}」`);
+  if (want.journal && m.journal && !norm(m.journal).includes(norm(want.journal)) && !norm(want.journal).includes(norm(m.journal)) && !truncatedMatch(m.journal, want.journal, 8)) diff.push(`刊名不同：实际是「${m.journal}」`);
   if (m.retracted) diff.push('这篇已被撤稿');
   return diff;
 }
