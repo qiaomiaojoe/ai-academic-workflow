@@ -4,8 +4,9 @@
 // 在单独资料的 Chrome（没有就用 Edge）里打开谷歌学术的结果页，读页面已经显示出来的结果。
 // 浏览器和 cnki、journal-rank 共用一个（~/.cnki-skill/browser），各用各的标签页。不用账号。
 //
-//   node scholar.mjs search "检索词" [--author 作者] [--journal 刊名] [--years 2020-2025] [--title-only] [--exact "精确短语"] [--exclude "不要的词"] [--sort date] [--page 1] [--size 20]
-//   node scholar.mjs cited-by <行号或 cites 编号> [--years 2020-2025] [--page 1] [--size 20]     谁引了这篇
+//   node scholar.mjs search "检索词" [--author 作者] [--journal 刊名] [--years 2020-2025] [--title-only] [--exact "精确短语"] [--exclude "不要的词"] [--sort date] [--page 1] [--size 10]
+//   node scholar.mjs cited-by <行号或 cites 编号> [--years 2020-2025] [--page 1] [--size 10]     谁引了这篇
+//   每页最多 10 条：一页 20 条谷歌会直接拦（11-10 实测），要更多就翻页
 //   node scholar.mjs export <行号或 cid>... --to bib|zotero [--out 文件]                         行号是上一次 search / cited-by 的第几条
 //   node scholar.mjs open                                                                         打开谷歌学术窗口（点验证码时用）
 //   node scholar.mjs check                                                                        自检
@@ -37,12 +38,13 @@ const STATE = path.join(DATA, 'scholar-state.json'), LAST = path.join(DATA, 'sch
 const PORT = Number(process.env.CNKI_PORT) || 19333;
 const HOURLY_LIMIT = 60; // 谷歌比知网敏感得多：一小时最多打开这么多页，每页隔 5–10 秒
 const CACHE_MIN = 30;    // 同样的检索 30 分钟内不重开：AI 截断了输出又跑一遍时，不多开一页、不多弹一次验证码（11-10 实测出现过）
-const COOLDOWN_H = 3;    // 被拦以后这么久不再去：乔淼家里网络被拦了一天以上，期间每次去都是白撞（11-09、11-10 实测）
+const COOLDOWN_H = 3;    // 被拦以后这么久不再去：11-09 晚乔淼家里网络连无痕窗口也被拦，第二天上午才恢复，期间每次去都是白撞
 const BASE = 'https://scholar.google.com';
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const readJson = (f, d) => { try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch { return d; } };
 const writeJson = (f, v) => { fs.mkdirSync(DATA, { recursive: true }); fs.writeFileSync(f, JSON.stringify(v, null, 1)); };
 class Stop extends Error { constructor(status, msg, extra = {}) { super(msg); Object.assign(this, { status, extra }); } }
+let sizeNote = ''; // --size 超过上限时，结果里注明按多少条查的
 
 // ---------- 浏览器 ----------
 
@@ -289,9 +291,12 @@ function parseArgs(argv) {
   return { pos, opt };
 }
 
+// 每页最多 10 条：同一窗口、几秒之内，num=10、num=5 都能搜，num=20 直接被拦（11-10 实测；11-09 起的「被拦」都是 20 条）
+const MAX_SIZE = 10;
 function paging(opt) {
-  const size = Math.min(20, Math.max(1, Number(opt.size) || 20)), page = Math.max(1, Number(opt.page) || 1);
+  const want = Math.max(1, Number(opt.size) || MAX_SIZE), size = Math.min(MAX_SIZE, want), page = Math.max(1, Number(opt.page) || 1);
   const out = { num: String(size), ...(page > 1 ? { start: String((page - 1) * size) } : {}) };
+  if (want > MAX_SIZE) sizeNote = `每页最多 ${MAX_SIZE} 条（一页 ${want} 条谷歌会直接拦），这次按 ${MAX_SIZE} 条查；要更多就加 --page 2、--page 3 翻页`;
   if (opt.years) {
     const m = String(opt.years).match(/^(\d{4})\s*[-–~至到]\s*(\d{4})?$|^(\d{4})$/);
     if (!m) throw new Stop('error', '--years 写成 2015-2025 或 2024');
@@ -385,7 +390,7 @@ async function main() {
   } finally { if (conn) await conn.then(b => b.close(), () => {}); }
 }
 
-main().then(r => { process.stdout.write(JSON.stringify(r, null, 1) + '\n'); if (!['ok', 'not_found'].includes(r.status)) process.exitCode = 1; }, e => {
+main().then(r => { if (sizeNote && r && typeof r === 'object') r.note = [r.note, sizeNote].filter(Boolean).join('；'); process.stdout.write(JSON.stringify(r, null, 1) + '\n'); if (!['ok', 'not_found'].includes(r.status)) process.exitCode = 1; }, e => {
   process.stdout.write(JSON.stringify({ status: e instanceof Stop ? e.status : 'error', msg: e.message, ...(e.extra || {}) }, null, 1) + '\n');
   process.exitCode = 1;
 });

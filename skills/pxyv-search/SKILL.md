@@ -44,7 +44,7 @@ description: PXYV 四维度文献检索（乔淼PhD · AI学术训练营 · AI�
 
 CNKI 固定参数：文献类型仅"学术期刊"（`--type 期刊`，严禁学位论文/会议/报纸/年鉴）；来源类别建议 `--core CSSCI,北大核心`；`--size 50` 一次多取，少翻页（知网查得太密会拦）。`cnki` 回的 status 不是 `ok` / `not_found` 时，按它的说明处理，这一库标「没搜成」并告诉用户，不拿别的库的结果冒充知网。
 
-Google Scholar 固定参数：`--size 20` 一次多取，少翻页（谷歌比知网更容易拦）。
+Google Scholar：每页 10 条（`scholar` 默认就是，不要传更大的 `--size`：一页 20 条谷歌会直接拦），不够再 `--page 2` 翻页。
 
 **不能搜 Web of Science、Scopus**（要学校订阅）。谷歌学术和 OpenAlex 的结果**不等于这两个库的检索结果**，不要写成「检索了 WoS / Scopus」。
 
