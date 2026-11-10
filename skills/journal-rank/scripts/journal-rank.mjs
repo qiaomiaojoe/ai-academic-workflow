@@ -6,6 +6,7 @@
 // 浏览器和 cnki skill 共用一个（~/.cnki-skill/browser），各用各的标签页。
 //
 //   node journal-rank.mjs lookup <刊名或 ISSN>...     一次可以查几本；刊名有空格要加引号
+//                                                      两样都有时写成 "刊名|ISSN"：按 ISSN 查不到会自动改按刊名查
 //   node journal-rank.mjs check                        自检：用一本固定的期刊看各项还取不取得到
 //
 // 输出一律是一段 JSON（UTF-8），status 只有这几种：
@@ -205,7 +206,23 @@ function toItem(rows) {
   };
 }
 
+// 「刊名|ISSN」一起给：先按 ISSN 查，查不到再按刊名。只出电子版的刊（BMC、Frontiers、MDPI 等）按 ISSN 常常一条都查不到，
+// 按刊名能查到（11-10 实测：40 本里 21 本按 ISSN 查不到，按刊名查到其中 10 本，多是 SSCI）
 async function lookup(b, q) {
+  const parts = q.split('|').map(s => s.trim()).filter(Boolean);
+  if (parts.length > 1) {
+    const issn = parts.find(p => ISSN.test(p)), name = parts.find(p => !ISSN.test(p));
+    let r = issn ? await lookupOne(b, issn) : { status: 'not_found' };
+    if (r.status !== 'ok' && name) {
+      r = await lookupOne(b, name);
+      if (r.status === 'ok' && issn) r.note = [r.note, `按 ISSN ${issn} 查不到，按刊名查到的；对一下 ISSN 是不是同一本`].filter(Boolean).join('；');
+    }
+    return { ...r, query: q };
+  }
+  return lookupOne(b, q);
+}
+
+async function lookupOne(b, q) {
   const isIssn = ISSN.test(q.trim());
   const key = isIssn ? q.trim().toUpperCase().replace(/^(\d{4})-?/, '$1-') : q.trim();
   const r = await fetchList(b, key, isIssn ? 'issn' : 'title');
@@ -249,6 +266,8 @@ async function check(b) {
   t('年发文量', Number(a.annual_articles) > 0, a.annual_articles);
   const n = await lookup(b, 'Journal That Does Not Exist Xyzzy');
   t('查不到时回 not_found', n.status === 'not_found', n.status);
+  const p = await lookup(b, 'Stress and Health|1532-2998'); // 这个 ISSN 在 iJournal 查不到，要靠刊名
+  t('刊名|ISSN：ISSN 查不到改按刊名', p.status === 'ok' && (p.databases || []).includes('SSCI'), p.status);
   return { status: items.every(i => i.结果 === '✓') ? 'ok' : 'layout_changed', items };
 }
 

@@ -29,14 +29,16 @@ description: PXYV 四维度文献检索（乔淼PhD · AI学术训练营 · AI�
 用户或工作台明确指定了工具时，按指定的来。否则：
 
 **英文**
-1. 每个检索式**先跑 `scholar` 的 `search`**。不能因为 OpenAlex 刊名更全、只要几条、或要按期刊级别筛，就跳过这一步。
-2. 只有下面这些情况，才对没搜成的检索式改用 `openalex` 的 `search`：
+1. 开始前提醒用户一句：谷歌学术可能弹验证码，要在弹出的窗口里点，最好留在电脑旁；没人点会自动改用 OpenAlex。
+2. 每个检索式**先跑 `scholar` 的 `search`**。不能因为 OpenAlex 刊名更全、只要几条、或要按期刊级别筛，就跳过这一步。`scholar` 的输出不要截断，太长就存成文件再读；截断了也不要重跑同一条。
+3. 只有下面这些情况，才对没搜成的检索式改用 `openalex` 的 `search`：
    - 没装 `scholar` skill；
    - `scholar` 回 `unreachable` / `blocked` / `limit` / `layout_changed` / `no_browser`；
-   - `scholar` 回 `captcha`，用户没有在窗口里点完。
-3. `scholar` 回 `not_found`：换词再搜谷歌学术，这不算搜不成。回 `error`：看 `msg` 改好参数再跑。
-4. 回 `blocked` / `limit` 时不要接着试谷歌学术，已经拿到的结果保留，其余检索式用 `openalex`。
-5. `scholar`、`openalex` 都用不了，才用自带 Web Search。
+   - `scholar` 回 `captcha`（3 分钟没人点）。
+4. `scholar` 回 `not_found`：换词再搜谷歌学术，这不算搜不成。回 `error`：看 `msg` 改好参数再跑。
+5. 回 `blocked` / `limit` / `captcha` 后，这次不要再跑谷歌学术，已经拿到的结果保留，其余检索式用 `openalex`。用户说换了网络，才按 `scholar` 的说明加 `--new-network` 再试。
+6. **改用 OpenAlex 时多搜一轮上位词**：OpenAlex 搜不到付费文章的正文，篇名和摘要里没出现检索词的付费文章会漏掉（11-10 实测：谷歌学术前 40 条里 12 篇付费，OpenAlex 同一检索式只搜中 4 篇）。所以每个维度除了原检索式，再用上位词或相邻构念搜一轮（如 burnout → stress / coping / well-being），合并去重。用户限定了检索式数量时按用户的，在报告里说明没补搜。从最相关的几篇做 `cited-by` / `refs` 滚雪球是可选的，结果多，要按主题词和年份筛。
+7. `scholar`、`openalex` 都用不了，才用自带 Web Search。
 
 **中文**：用 `cnki`。只有没装 `cnki` skill 时才用自带 Web Search，并在报告里写明。
 
@@ -49,7 +51,7 @@ Google Scholar 固定参数：`--size 20` 一次多取，少翻页（谷歌比�
 ## 按期刊级别筛（用户要求时）
 
 1. 谷歌学术的刊名常被截断（以 `…` 结尾）：先用 `openalex` 的 `verify --file` 补全完整刊名和 DOI；
-2. 刊名去重后，用 `journal-rank` 的 `lookup` 查（一次传几本，有 ISSN 用 ISSN），结果填进候选表的「期刊层级」列；
+2. 刊名去重后，用 `journal-rank` 的 `lookup` 查（一次传几本；有 ISSN 时写成 `"刊名|ISSN"` 一起传，**不要只传 ISSN**：只出电子版的刊按 ISSN 常常查不到），结果填进候选表的「期刊层级」列；
 3. 按用户要的级别筛掉其余的。查不到的（中文刊、`journal-rank` 没收的）单列出来问用户，不当成不合格；
 4. 报告写明：「按 iJournal 的期刊收录和分区筛选（查询日期）。不等于 Web of Science / Scopus 检索结果。」检索来源按「输出」一节写。
 
@@ -73,7 +75,7 @@ Google Scholar 固定参数：`--size 20` 一次多取，少翻页（谷歌比�
 
 ## 输出
 
-先写检索来源，每个用到或该用的库一行：谷歌学术写「搜成了」或「没搜成 + `status` / 原因」；OpenAlex 写「没用」或「谷歌学术没搜成，改用」；知网同样写清。
+先写检索来源，每个用到或该用的库一行：谷歌学术写「搜成了」或「没搜成 + `status` / 原因」；OpenAlex 写「没用」或「谷歌学术没搜成，改用」，改用时加一句「OpenAlex 搜不到付费文章的正文，付费文章可能漏掉一些；谷歌学术能用时（比如换个网络）可以再补搜」；知网同样写清。
 
 再亮出各维度实际用的检索式（工具 + 年限），然后给候选清单原始表：
 

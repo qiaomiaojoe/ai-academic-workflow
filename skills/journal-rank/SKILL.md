@@ -12,7 +12,9 @@ node <skill>/scripts/journal-rank.mjs lookup "刊名或 ISSN" ["第二本" ...]
 node <skill>/scripts/journal-rank.mjs check
 ```
 
-- 刊名用英文全称或简称都行，大小写、`&` 和 `and` 都不影响；有 ISSN 优先用 ISSN（`0360-1315`）。
+- 刊名用英文全称或简称都行，大小写、`&` 和 `and` 都不影响。
+- **刊名和 ISSN 都有时，写成 `"刊名|ISSN"` 一起传**（`"Stress and Health|1532-2998"`）：先按 ISSN 查，查不到自动改按刊名查，结果里 `note` 会注明。只出电子版的刊（BMC、Frontiers、MDPI 等）按 ISSN 常常一条都查不到，只传 ISSN 会把 SSCI 期刊误报成 `not_found`。
+- 只有 ISSN、回了 `not_found` 时，不要当成「没被收录」：先用 `openalex` 查出刊名，再按刊名查一次。
 - 一次可以查几本。每查一页要隔 2–4 秒，按 ISSN 查会多查一页（补 JCR 学科和 EI），一小时最多 120 页。
 - 浏览器和 `cnki` skill 共用一个窗口（各用各的标签页），不碰用户平时用的浏览器。
 
